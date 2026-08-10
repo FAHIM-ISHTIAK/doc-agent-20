@@ -26,6 +26,7 @@ NCTB_NAME="nctb_bangla_grammar.pdf"
 BHASHA_SHA256="2e6a6e08e942d91e0986e2282ddeec9e6b4882ac6f4b89e083bf9bab6e72d39b"
 NCTB_SHA256="3cb900fb1ce51bb91e13e41d43c51d98260a29ffffbed5632b0adee130640086"
 BHASHA_URL="https://archive.org/download/in.ernet.dli.2015.457377/2015.457377.Bhasha-prakash-Bangala.pdf"
+NCTB_URL="${BMA_NCTB_URL:-https://drive.egovcloud.gov.bd/index.php/s/z7CNJUJAw9UuPv5/download}"
 
 mkdir -p "$RAW_DIR" "$INTERIM_DIR" "$CACHE_DIR"
 
@@ -41,15 +42,10 @@ if [[ ! -f "$BHASHA_PDF" ]]; then
 fi
 
 if [[ ! -f "$NCTB_PDF" ]]; then
-  if [[ -n "${BMA_NCTB_URL:-}" ]]; then
-    NCTB_PDF="${CACHE_DIR}/${NCTB_NAME}"
-    echo "Downloading the declared 2026 NCTB source from BMA_NCTB_URL..."
-    curl --fail --location --retry 3 --output "$NCTB_PDF" "$BMA_NCTB_URL"
-  else
-    echo "ERROR: 2026 NCTB PDF not found at: ${NCTB_PDF}" >&2
-    echo "Attach the private Kaggle dataset, set BMA_CORPUS_DIR, set BMA_NCTB_PDF," >&2
-    echo "or provide the original public URL through BMA_NCTB_URL." >&2
-    exit 2
+  NCTB_PDF="${CACHE_DIR}/${NCTB_NAME}"
+  if [[ ! -f "$NCTB_PDF" ]]; then
+    echo "Downloading the declared 2026 NCTB source from the official eGovCloud mirror..."
+    curl --fail --location --retry 3 --output "$NCTB_PDF" "$NCTB_URL"
   fi
 fi
 

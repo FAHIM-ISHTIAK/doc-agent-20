@@ -27,10 +27,14 @@ Usable OCR word count: **pending Phase 6 measured OCR**; it must replace `0` in 
 
 ### 2026 NCTB volume
 
-- Publisher/source organization: National Curriculum and Textbook Board, Bangladesh — <https://nctb.gov.bd/>
+- Official 2026 classes 9–10 book-list page: <https://nctb.gov.bd/pages/static-pages/695b99afc4774958d7b70612>
+- The official page lists *বাংলা ভাষার ব্যাকরণ ও নির্মিতি* and provides these mirrors:
+  - Google Drive: <https://drive.google.com/file/d/1yqoG73PYj6F8xlB-WTNfGSUk9Yf1z_tR/view?usp=drive_link>
+  - Government eGovCloud: <https://drive.egovcloud.gov.bd/index.php/s/z7CNJUJAw9UuPv5>
+  - Direct eGovCloud download used by the recreation script: <https://drive.egovcloud.gov.bd/index.php/s/z7CNJUJAw9UuPv5/download>
 - Team source filename before renaming: `Secondary (BV)-2026_Class 9-10_Bangla Grammar_compressed.pdf`
 - Kaggle private-dataset filename: `nctb_bangla_grammar.pdf`
-- A precise public direct-download URL was not recorded when the team acquired the file. Add it here if the original download page can be recovered.
+- The direct download reports the same original filename and **143,145,319-byte** content length as the team's verified file.
 - Free educational distribution is not the same as an open redistribution licence.
 - Policy: **link only; educational use; do not redistribute from this repository**.
 

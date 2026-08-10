@@ -30,6 +30,7 @@ corpus:
       sha256: "2e6a6e08e942d91e0986e2282ddeec9e6b4882ac6f4b89e083bf9bab6e72d39b"
       split: "train"
       redistributable: false
+      source_url: "https://archive.org/download/in.ernet.dli.2015.457377/2015.457377.Bhasha-prakash-Bangala.pdf"
     - doc_id: "nctb_bangla_grammar_2026"
       filename: "nctb_bangla_grammar.pdf"
       pages: 218
@@ -37,6 +38,8 @@ corpus:
       sha256: "3cb900fb1ce51bb91e13e41d43c51d98260a29ffffbed5632b0adee130640086"
       split: "test"
       redistributable: false
+      source_url: "https://nctb.gov.bd/pages/static-pages/695b99afc4774958d7b70612"
+      direct_download: "https://drive.egovcloud.gov.bd/index.php/s/z7CNJUJAw9UuPv5/download"
 
 heldout:
   pages_dir: "grading_kit/heldout_pages/"
