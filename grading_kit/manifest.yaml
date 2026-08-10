@@ -1,35 +1,50 @@
-# grading_kit/manifest.yaml — the SINGLE entry point a grader reads.
-# You fill this in. It declares the THREE axes and points to everything
-# needed to reproduce, evaluate, and grade the project. A grader opens
-# ONLY this file; it points to the rest. Build/run scripts and the eval
-# tasks are NAMED here, not copied, so they never go stale.
-
-project_id: ""              # your team id
+# Single grading entry point for Team 20.
+project_id: "20"
+project_name: "Bangla Morphological Analyzer"
 
 axes:
-  domain: ""                # your corpus subject / real user (see Roster; one per team)
-  data_speciality: ""       # ONE hard property of your corpus you are handed (see Data-Speciality Catalog)
-                            #   e.g. bangla | arabic | code-switching | degraded-scans | multi-column |
-                            #        handwritten | old-orthography | math-notation | dirty-ocr | ...
-                            #   (English is not a speciality; if your corpus is English, pick a data condition.)
-  primary_nfr: ""           # ONE quality you optimise ABOVE baseline (see NFR sheet). Faithful &
-                            #   accurate are REQUIRED of everyone (baseline), so they are NOT choices.
-  nfr_target: ""            # the concrete target you commit to for that NFR, e.g. "p95 latency <= 300ms",
-                            #   "peak RAM <= 2GB", "ECE <= 0.05", "PII recall >= 0.98"
+  domain: "bangla-grammar-morphology"
+  data_speciality: "bangla"
+  primary_nfr: "explainable"
+  nfr_target: "rule attribution coverage >= 0.90"
+
+success:
+  metric: "answer-F1"
+  target: 0.70
 
 corpus:
-  path: data/raw/                   # where the scanned page-images live
-  pages: 0                          # total pages  (floor: >= 300)
-  words: 0                          # total words  (floor: >= 60000)
-  provenance: data/provenance.md    # source + licence + counts
+  path: "data/raw/"
+  pages: 783
+  words: 0
+  words_status: "pending measured OCR in A2"
+  provenance: "data/provenance.md"
+  preparation: "scripts/get_data.sh"
+  revision_from_a1: >-
+    The NCTB document changed from the 2019 edition named in A1 to the 2026
+    218-page edition. The A2 form must disclose this revision.
+  documents:
+    - doc_id: "bhasha_prakash_1942"
+      filename: "bhasha_prakash_1942.pdf"
+      pages: 565
+      bytes: 26715873
+      sha256: "2e6a6e08e942d91e0986e2282ddeec9e6b4882ac6f4b89e083bf9bab6e72d39b"
+      split: "train"
+      redistributable: false
+    - doc_id: "nctb_bangla_grammar_2026"
+      filename: "nctb_bangla_grammar.pdf"
+      pages: 218
+      bytes: 143145319
+      sha256: "3cb900fb1ce51bb91e13e41d43c51d98260a29ffffbed5632b0adee130640086"
+      split: "test"
+      redistributable: false
 
 heldout:
-  pages_dir: grading_kit/heldout_pages/   # page-images set aside, never OCR-trained on
-  labels:    grading_kit/labels.jsonl     # ground-truth transcriptions for those pages
+  pages_dir: "grading_kit/heldout_pages/"
+  labels: "grading_kit/labels.jsonl"
 
-entrypoints:                          # named, not duplicated (they build/run the real code)
-  build_index: scripts/build_index.sh
-  run_query:   scripts/run.sh
-  eval_tasks:  grading_kit/tasks.jsonl      # authored in A3
-  checker:     grading_kit/success_check.py
-  trace:       traces/run.jsonl              # JSONL trajectory the A3 agentic-feature check reads
+entrypoints:
+  build_index: "scripts/build_index.sh"
+  run_query: "scripts/run.sh"
+  eval_tasks: "grading_kit/tasks.jsonl"
+  checker: "grading_kit/success_check.py"
+  trace: "traces/run.jsonl"
