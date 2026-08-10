@@ -3,6 +3,15 @@
 seed: 42
 device: "cuda"
 
+runtime:
+  mode: "small"
+  small_max_pages: 20
+  input_root_env: "DOC_AGENT_INPUT_ROOT"
+  data_dir_env: "DOC_AGENT_DATA_DIR"
+  artifact_dir_env: "DOC_AGENT_ARTIFACT_DIR"
+  mode_env: "DOC_AGENT_RUN_MODE"
+  max_pages_env: "DOC_AGENT_SMALL_MAX_PAGES"
+
 data:
   raw_dir: "data/raw"
   interim_dir: "data/interim"

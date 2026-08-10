@@ -1,5 +1,7 @@
 .PHONY: setup seed ingest index eval serve test lint
-setup: ; uv sync --frozen
+setup:
+	python -m pip install -r requirements.lock
+	python -m pip install -e . --no-deps
 seed:  ; python scripts/set_seed.py
 ingest:; python scripts/run_ingest.py
 index: ; python scripts/run_index.py
