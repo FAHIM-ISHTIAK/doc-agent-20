@@ -12,3 +12,4 @@ PyYAML==6.0.3
 pytest==8.4.2
 ruff==0.16.2
 black==26.5.1
+easyocr==1.7.2

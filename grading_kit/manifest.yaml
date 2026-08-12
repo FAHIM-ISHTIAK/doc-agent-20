@@ -44,7 +44,7 @@ corpus:
 heldout:
   pages_dir: "grading_kit/heldout_pages/"
   labels: "grading_kit/labels.jsonl"
-  selected_pages: 16
+  selected_pages: 12
   render_dpi: 300
   excluded_from_training_and_tuning: true
   label_status: "pending manual transcription and independent review"
