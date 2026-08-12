@@ -1,0 +1,1510 @@
+A2 AI-ASSISTED WORK TRANSCRIPT
+=============================
+
+Member name: Fahim Ishtiak
+Student number: 2105004
+Sections led (current A2 mapping): Section 1; Section 2; Section 3
+(ingest/preprocessing and OCR options); Section 7 (Stage 1 design choices); Section 8 (this individual transcript). Supporting work covered A2 planning and
+Phases 0-4: the repository/Kaggle workflow, A1 corpus recovery and provenance,
+reproducible configuration, held-out ground-truth preparation, OCR model
+evaluation, document ingest, classical preprocessing, validation evidence, and
+the Phase 4 handover.
+
+FULL CONVERSATION
+=================
+
+ME:
+I have attached our project scope and the A1 form of this assignment, also attached a ipynb file. Now I need to do the A2 assignment first. Start from the START-HERE pdf under handbook folder . A2 form is under forms folder. But at first go through all the stuffs and tell me what to do . Provide us a plan. We are a 3 person group, each of them will be evaluated based on the commit. So suggest a plan for A2 assignment for 3 of us ,provide work distribution. Provide a md file of that plan.
+
+GPT:
+Created the complete plan: [A2_PLAN.md](/D:/L-4,T-1/DL/doc-agent-starter/A2_PLAN.md).
+Main findings:
+The repository is still mostly untouched starter code. A1 configuration, corpus provenance, held-out labels, notebooks, and all A2 pipeline stages remain placeholders.
+
+First recover the A1 artifacts into the repository; then build a 10–20-page end-to-end baseline before processing all ~735 pages.
+
+The supplied OCR notebook is useful experimental material but cannot be inserted directly. It lacks the repository contracts, evaluation, stable page metadata, and declared corpus handling.
+
+Work distribution:
+Fahim: chunking, embeddings, FAISS index, retrieval evidence.
+Nahid: A1 carry-forward, corpus ingestion, preprocessing, layout.
+Junaid: held-out labels, OCR implementation, CER/WER evaluation.
+
+Each member receives code, tests, documentation, form sections, and 6–10 suggested meaningful commits.
+
+Follow the handbook’s GitHub-tag submission workflow. The ZIP instructions inside the form appear stale.
+
+pytest could not currently run because it is not installed; environment and lockfile setup is the first technical gate.
+
+The plan file is the only workspace change and remains uncommitted. Because the regulated repository discourages extra submission files, keep it for coordination but remove it before a2-submit unless the instructor approves it.
+
+ME:
+The A2_PLAN.md u provided contains who will do what . But I want a change in plan , instead of assigning works to the 3 people,,, divide the project(a2 assignnemt) in phases...then we will decide who will do what and commit accordingly and one important thing we will run notebooks in kaggle instead of running locally. Now plan accordingly
+
+GPT:
+Updated [A2_PLAN.md](/D:/L-4,T-1/DL/doc-agent-starter/A2_PLAN.md) as requested.
+Changes made:
+Removed all assignments to Fahim, Nahid, and Junaid.
+Divided A2 into 11 dependency-ordered phases.
+Added a blank allocation board with Lead, Reviewer, Branch, and Status fields.
+Changed execution to a Kaggle-first workflow.
+Added private Kaggle dataset guidance for the link-only corpus.
+Added Kaggle paths, dependency rules, artifact export, notebook saving, and reproducibility procedures.
+Explained which phases can run concurrently.
+Added entry and exit conditions for every phase.
+Added suggested commits without assigning them to anyone.
+Preserved the requirement that everyone eventually owns code, tests, evidence, and their transcript.
+The phases are:
+Team Git and work allocation
+A1 recovery and corpus contract
+Kaggle environment setup
+Held-out pages and labels
+Ingest and preprocessing
+Layout and reading order
+Bangla OCR and evaluation
+Chunking, embedding and FAISS
+Full Kaggle experiments
+Evidence, documentation and A2 form
+Final Kaggle verification and submission
+The file remains uncommitted and is the only workspace change.
+
+ME:
+For phase 0, I have created a public repo, added others as collaborators...what branch names should be used? and also tell phase 0's remaining work flows
+
+GPT:
+Use short-lived phase branches, not permanent fahim, nahid, or junaid branches.
+Branch naming convention
+Use:
+<github-username>/a2-p<phase-number>-<short-description>
+Examples:
+fahim-ishtiak/a2-p01-corpus
+nahid/a2-p02-kaggle-runtime
+junaid/a2-p03-heldout-labels
+fahim-ishtiak/a2-p04-ingest
+nahid/a2-p05-layout
+junaid/a2-p06-ocr
+fahim-ishtiak/a2-p07-index
+These names are examples only—the person assigned to a phase uses their username.
+If a phase is divided:
+<username>/a2-p06-ocr-baseline
+<username>/a2-p06-ocr-normalization
+<username>/a2-p06-ocr-evaluation
+Do not use vague long-lived branches such as:
+developer
+member1
+work
+final
+test
+fahim
+Branches are temporary. Create one when work starts, merge it through a pull request, and delete it afterward.
+Phase 0 remaining workflow
+You have completed:
+public repository creation;
+collaborator invitations.
+Complete the following in order.
+Step 1 — Confirm collaborator access
+Both teammates must accept the GitHub invitations.
+Each person should clone the repository independently:
+git clone https://github.com/FAHIM-ISHTIAK/doc-agent-20.git
+cd doc-agent-20
+Then verify:
+git remote -v
+git branch --show-current
+Expected remote:
+origin  https://github.com/FAHIM-ISHTIAK/doc-agent-20.git
+Expected branch:
+main
+Each member should test their access by creating and pushing a temporary work branch only after receiving an assigned task.
+Step 2 — Configure individual Git identities
+Every member runs these commands on their own computer, inside the repository:
+git config user.name "Their Full Name"
+git config user.email "their-github-email@example.com"
+Verify:
+git config user.name
+git config user.email
+The email should be connected to their GitHub account. They may use GitHub’s private noreply email.
+Check the identity before every first commit from a new computer:
+git config --list --local
+This is critical because contribution evaluation uses commit authorship.
+Do not let teammates commit from your computer while your Git identity is configured.
+Step 3 — Configure main branch protection
+On GitHub:
+Repository
+→ Settings
+→ Branches
+→ Add branch protection rule
+Branch pattern:
+main
+Recommended settings:
+Require a pull request before merging.
+Require at least one approval.
+Require conversation resolution.
+Block force pushes.
+Block branch deletion.
+Do not require passing status checks yet if CI is not working.
+Once CI works, enable required status checks.
+Also keep “merge commits” enabled. Avoid squashing an entire phase because the detailed individual commit history is useful for evaluation.
+Step 4 — Agree on the branch workflow
+Before starting a phase, its lead runs:
+git switch main
+git pull --ff-only origin main
+git switch -c <username>/a2-pXX-description
+git push -u origin HEAD
+During work:
+git status
+git add <specific-files>
+git commit -m "meaningful commit message"
+git push
+Before opening the pull request:
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+--force-with-lease is acceptable only on the member’s unmerged feature branch—not on main.
+Then:
+Open a pull request.
+Assign a teammate as reviewer.
+Reviewer checks code, tests and outputs.
+Resolve review comments.
+Merge while preserving commits.
+Delete the feature branch.
+After merge, every member updates locally:
+git switch main
+git pull --ff-only origin main
+Step 5 — Create the phase allocation board
+Do not assign every phase immediately. Assign the next executable phases first:
+Phase    Lead    Reviewer    Branch    Status
+Phase 1 — A1 recovery/corpus    TBD    TBD    <user>/a2-p01-corpus    Ready
+Phase 2 — Kaggle runtime    TBD    TBD    <user>/a2-p02-kaggle-runtime    Ready
+Phase 3 — Held-out labels    TBD    TBD    <user>/a2-p03-heldout-labels    Blocked until stable page IDs
+
+Use GitHub Issues or a private team document for this board. Each issue can contain:
+Phase:
+Lead:
+Reviewer:
+Files:
+Expected output:
+Exit condition:
+Branch:
+Pull request:
+Do not decide Worked sections in the A2 form yet. Record them after completing the work.
+Step 6 — Decide contribution-balancing rules
+Before implementation, agree that each member will eventually have:
+at least one code implementation;
+at least one test or evaluation contribution;
+at least one notebook/design/form contribution;
+their own transcript;
+several meaningful commits.
+Commit count alone is not enough. A person with ten typo commits and no implementation still has weak evidence.
+Step 7 — Create the private Kaggle corpus dataset
+Because the books are link-only:
+Create a private Kaggle dataset.
+Upload the two source PDFs.
+Keep the dataset private.
+Add all three members as collaborators if Kaggle supports it.
+Never publish the dataset.
+Recommended filenames:
+bhasha_prakash_1942.pdf
+nctb_bangla_grammar.pdf
+Expected Kaggle path:
+/kaggle/input/bma-corpus/
+The exact Kaggle slug may differ, so the application must accept a configurable corpus path.
+Step 8 — Create the initial Kaggle notebook
+Create a private Kaggle notebook and select the required accelerator—start with one GPU.
+Initial cells should:
+# Display environment
+import sys
+import torch
+
+print("Python:", sys.version)
+print("PyTorch:", torch.__version__)
+print("CUDA available:", torch.cuda.is_available())
+print("GPU:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU")
+Clone the repository:
+!git clone https://github.com/FAHIM-ISHTIAK/doc-agent-20.git
+%cd /kaggle/working/doc-agent-20
+!git rev-parse HEAD
+Verify corpus input:
+from pathlib import Path
+
+corpus_dir = Path("/kaggle/input/bma-corpus")
+print(list(corpus_dir.glob("*.pdf")))
+Do not begin full OCR yet. Phase 0 only needs to prove that Kaggle can:
+access the repository;
+access the private corpus;
+use the GPU;
+write to /kaggle/working;
+import the package.
+Step 9 — Decide dependency management
+The current repository has a problem:
+requirements.lock is empty;
+Makefile uses uv sync --frozen;
+no uv.lock currently exists.
+For the initial Kaggle smoke test, you may install the project temporarily with:
+!pip install -e ".[dev]"
+But this is not reproducible enough for the final submission.
+During Phase 0/2, choose and document one final lock workflow. Based on the repository comments, the likely intended approach is generating requirements.lock with uv pip compile, but confirm how make setup should consume it before finalizing.
+Do not let every member use a different unrecorded dependency set.
+Step 10 — Perform a Kaggle smoke test
+In Kaggle:
+import doc_agent
+from doc_agent import config
+from doc_agent.contracts import Page, Region, Chunk
+
+cfg = config.load()
+print(cfg)
+print("Import successful")
+Also verify write access:
+from pathlib import Path
+
+artifact_dir = Path("/kaggle/working/artifacts")
+artifact_dir.mkdir(parents=True, exist_ok=True)
+(artifact_dir / "smoke_test.txt").write_text("Kaggle setup works", encoding="utf-8")
+Phase 0 does not require the pipeline to work yet. Most pipeline functions are still placeholders.
+Step 11 — Decide notebook ownership rules
+Because .ipynb files create merge conflicts:
+only one person edits a particular notebook at a time;
+other members provide results through code modules, JSON/CSV outputs, or reviewed snippets;
+the notebook owner pulls the latest main before editing;
+executed notebooks must be downloaded from Kaggle and committed;
+do not strip the final evidence outputs;
+never leave important code only in %%writefile cells.
+Repository modules are canonical; the notebook should call them.
+Step 12 — Confirm secrets and data safety
+Never commit:
+kaggle.json
+GitHub tokens
+API keys
+.env
+source PDFs
+full rendered corpus
+model cache
+temporary OCR images
+Check before every pull request:
+git status
+git diff --cached
+Phase 0 should establish where secrets live and how Kaggle gets access without notebook-embedded credentials.
+Phase 0 completion checklist
+Phase 0 is complete when:
+
+Both teammates accepted collaborator access.
+
+All three cloned the repository.
+
+Each member configured a unique Git identity.
+
+main branch protection is enabled.
+
+The branch naming and pull-request workflow is agreed.
+
+Phases 1 and 2 have leads and reviewers.
+
+Contribution-balancing rules are agreed.
+
+The private Kaggle corpus dataset exists.
+
+A Kaggle notebook can see both PDFs.
+
+Kaggle can clone and import the repository.
+
+Kaggle detects the selected GPU.
+
+Kaggle can write an artifact under /kaggle/working.
+
+The dependency-lock problem has an agreed resolution or assigned owner.
+
+Notebook editing rules are agreed.
+
+No secrets or corpus files are tracked.
+Once this checklist is complete, Phase 1 and Phase 2 can start simultaneously.
+
+ME:
+I tried to run
+import doc_agent
+from doc_agent import config
+from doc_agent.contracts import Page, Region, Chunk
+
+cfg = config.load()
+print(cfg)
+print("Import successful")
+
+But it says no modlue found named doc_agent
+
+GPT:
+This happens because the repository uses a src/ package layout:
+doc-agent-20/
+└── src/
+    └── doc_agent/
+Python cannot see src/doc_agent until the repository is installed or src is added to sys.path.
+Run these Kaggle cells in order.
+1. Find the cloned repository
+!pwd
+!find /kaggle/working -maxdepth 3 -name pyproject.toml -print
+You should see something like:
+/kaggle/working/doc-agent-20/pyproject.toml
+If nothing appears, clone the repository:
+%cd /kaggle/working
+!git clone https://github.com/FAHIM-ISHTIAK/doc-agent-20.git
+2. Move to the repository root
+%cd /kaggle/working/doc-agent-20
+!ls
+Confirm that the output contains:
+pyproject.toml
+configs
+src
+tests
+3. Install the local package
+For the initial smoke test, install only the repository package without downloading all model dependencies:
+%pip install -e . --no-deps
+The . is important—it means “install the project in the current directory.”
+4. Verify Python can locate it
+import importlib.util
+
+print(importlib.util.find_spec("doc_agent"))
+It should return a ModuleSpec, not None.
+5. Run your original test
+import doc_agent
+from doc_agent import config
+from doc_agent.contracts import Page, Region, Chunk
+
+cfg = config.load("configs/config.yaml")
+
+print(cfg)
+print("Import successful")
+Temporary alternative
+If editable installation fails, add src directly to Python’s search path:
+import sys
+from pathlib import Path
+
+repo_root = Path("/kaggle/working/doc-agent-20")
+sys.path.insert(0, str(repo_root / "src"))
+
+from doc_agent import config
+from doc_agent.contracts import Page, Region, Chunk
+
+cfg = config.load(repo_root / "configs/config.yaml")
+
+print(cfg)
+print("Import successful")
+This is suitable for diagnosis, but the final notebook should install the package using:
+%pip install -e . --no-deps
+Otherwise notebook execution depends on a manual sys.path modification.
+If the error remains, run this and check whether doc_agent is actually present:
+!ls -la /kaggle/working/doc-agent-20/src
+!ls -la /kaggle/working/doc-agent-20/src/doc_agent
+The most likely fix is simply:
+%cd /kaggle/working/doc-agent-20
+%pip install -e . --no-deps
+
+ME:
+provide me the whole notebook, I cannot just copy paste everytime its boring
+
+GPT:
+Done. The complete Kaggle-ready Phase 0 notebook is here:
+[Open/download eda.ipynb](/D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb)
+In Kaggle:
+Import/upload this notebook.
+Attach the private corpus dataset containing both PDFs.
+Enable a GPU and Internet.
+Click Run All.
+It automatically:
+clones or updates your GitHub repository;
+records the exact commit hash;
+installs doc_agent;
+fixes the src/ import path;
+verifies GPU/CUDA;
+imports Page, Region, and Chunk;
+loads both configuration files;
+discovers attached PDFs automatically;
+validates the contracts;
+writes a Phase 0 artifact under /kaggle/working/artifacts.
+The notebook JSON was validated successfully. No more cell-by-cell copying.
+
+ME:
+I ran the notebook in kaggle without errors. Hope phase 0 has been done. Now me help do phase 1. (In case u need anything ask me)
+
+GPT:
+Before I implement Phase 1, I need two confirmations because your machine contains two different NCTB editions:
+Paste the output from Kaggle’s “Discover attached corpus PDFs” cell—just the PDF filenames, sizes, and paths.
+
+Confirm your official team ID: is it 20 or G20?
+
+A1 declares the 2019 NCTB grammar book, but your Downloads contain both:
+a 2019-era 222-page PDF;
+a 2026 218-page PDF.
+We must choose the correct one now because it determines hashes, page IDs, provenance, train/test split, citations, and all later OCR results.
+
+ME:
+1. Found 2 PDF file(s) under /kaggle/input:
+   - /kaggle/input/datasets/fahimishtiak/bma-corpus/bhasha_prakash_1942.pdf (25.48 MB)
+   - /kaggle/input/datasets/fahimishtiak/bma-corpus/nctb_bangla_grammar.pdf (136.51 MB)
+   CORPUS DISCOVERY: PASS   (I renamed the files)
+2. 20
+3. I'm using 2026 218 page pdf
+
+GPT:
+Phase 1 implementation is ready. The repository now uses Team 20, the 565-page 1942 book, and the 218-page 2026 NCTB book.
+Updated files:
+[task.yaml](/D:/L-4,T-1/DL/doc-agent-starter/configs/task.yaml)
+[config.yaml](/D:/L-4,T-1/DL/doc-agent-starter/configs/config.yaml)
+[manifest.yaml](/D:/L-4,T-1/DL/doc-agent-starter/grading_kit/manifest.yaml)
+[provenance.md](/D:/L-4,T-1/DL/doc-agent-starter/data/provenance.md)
+[get_data.sh](/D:/L-4,T-1/DL/doc-agent-starter/scripts/get_data.sh)
+[eda.ipynb](/D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb)
+[pyproject.toml](/D:/L-4,T-1/DL/doc-agent-starter/pyproject.toml)
+What the updated notebook does
+The notebook now runs Phase 0 and Phase 1 together with Run All:
+clones the fahim branch;
+installs Phase 1 dependencies;
+validates both exact filenames;
+validates both SHA-256 hashes;
+verifies 565 + 218 = 783 pages;
+measures page geometry and rotation;
+displays six real corpus pages;
+measures basic scan statistics;
+declares the document-level train/test split;
+records the 2019-to-2026 corpus revision;
+exports the Phase 1 inventory and summary.
+What you should do now
+If you are taking ownership of Phase 1, commit the source/configuration work under your account.
+First commit:
+git add configs/task.yaml configs/config.yaml data/provenance.md grading_kit/manifest.yaml pyproject.toml
+git commit -m "chore(a1): declare Team 20 corpus and configuration"
+Second commit:
+git add scripts/get_data.sh notebooks/eda.ipynb
+git commit -m "feat(data): add Kaggle corpus inventory and EDA"
+git push origin fahim
+Then:
+Upload/import the updated eda.ipynb into Kaggle.
+Attach the existing private bma-corpus dataset.
+Enable GPU and Internet.
+Click Run All.
+Confirm every Phase 1 cell ends in PASS.
+Save a Kaggle version with outputs.
+Download the executed notebook.
+Replace the local notebooks/eda.ipynb.
+Commit the measured outputs:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 1 corpus measurements"
+git push origin fahim
+Expected results
+The integrity cell must show:
+bhasha_prakash_1942:
+pages = 565
+SHA256 = 2e6a6e08e942d91e0986e2282ddeec9e6b4882ac6f4b89e083bf9bab6e72d39b
+
+nctb_bangla_grammar_2026:
+pages = 218
+SHA256 = 3cb900fb1ce51bb91e13e41d43c51d98260a29ffffbed5632b0adee130640086
+
+Combined pages = 783
+CORPUS IDENTITY AND INTEGRITY: PASS
+One remaining thing I need from you
+Please send me the exact webpage/download URL from which you obtained the 2026 NCTB PDF, if you still have it.
+Currently provenance records the official NCTB homepage and explicitly says the exact download URL was not retained. Also, because A1 named the 2019 edition, you should notify the instructor that A2 uses the 2026 edition. Before submission, either obtain approval or revert to the 2019 corpus.
+
+ME:
+I replaced the notebook . Have a look
+here's the url of nctb book list : [https://nctb.gov.bd/pages/static-pages/695b99afc4774958d7b70612](https://nctb.gov.bd/pages/static-pages/695b99afc4774958d7b70612)
+
+GPT:
+I checked the replaced notebook. Phase 1 execution passed successfully:
+All 13 code cells executed.
+No saved errors or tracebacks.
+All Phase 0 and Phase 1 checks reported PASS.
+Both SHA-256 hashes matched.
+Combined corpus count was 783 pages.
+Six real page samples were saved.
+Train/test split was declared.
+Phase 1 inventory and summary were exported.
+Tested commit: bbe2cdebb9208469a4cdf62cda8e400d2d286e98, matching the Phase 1 source commit.
+I also verified the official NCTB 2026 book-list page. It provides an official eGovCloud download whose filename and 143,145,319-byte size match your PDF.
+I updated:
+data/provenance.md
+configs/task.yaml
+grading_kit/manifest.yaml
+scripts/get_data.sh
+The recreation script can now download the exact NCTB PDF automatically from the official government mirror.
+Commit the completed work
+First commit the executed notebook:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 1 corpus measurements"
+Then commit the official source information:
+git add configs/task.yaml data/provenance.md grading_kit/manifest.yaml scripts/get_data.sh
+git commit -m "docs(data): pin official NCTB 2026 source"
+git push origin fahim
+Phase 1 is now technically complete. Two intentionally deferred values remain:
+usable word count—measured after OCR;
+validation chapter boundaries—selected after layout inspection.
+You should still disclose or confirm with the instructor that A2 uses the 2026 edition whereas A1 named the 2019 edition.
+
+ME:
+Can u explain what has been done in phase 1? Explain in simpler language as I'm new to rag, I could understand some fancy technical terms
+
+GPT:
+Phase 1 was about preparing and verifying your books. We have not built OCR, embeddings, retrieval, or the RAG system yet.
+Think of the project like building a digital library:
+Phase 1: collect and catalogue the books
+Phase 2+: read the pages with OCR
+Later: organize the text and make it searchable
+Finally: answer questions from the searchable text
+1. We identified the exact books
+Your project uses two books:
+Book    Pages    Purpose
+1942 Bangla grammar book    565    Training/development book
+2026 NCTB grammar book    218    Final testing book
+Total    783    Above the required 300 pages
+
+Together, the source PDFs are approximately 161.99 MiB.
+In RAG terminology, this collection of documents is called the corpus. It simply means “all the documents our system will learn/search from.”
+2. We verified that the files are correct
+Files with the same name can contain different content. Therefore, we calculated a SHA-256 hash for each PDF.
+A hash is like a digital fingerprint:
+PDF file → SHA-256 calculation → unique fingerprint
+Your fingerprints are:
+1942 book:
+2e6a6e08e942d91e0986e2282ddeec9e6b4882ac6f4b89e083bf9bab6e72d39b
+
+2026 NCTB book:
+3cb900fb1ce51bb91e13e41d43c51d98260a29ffffbed5632b0adee130640086
+If someone downloads a different or corrupted file, the fingerprint will not match. This prevents your team from accidentally processing different versions of a book.
+3. We recorded where the books came from
+This information is called provenance.
+Provenance means the history of the data:
+Who published it?
+Where was it downloaded?
+Which edition is it?
+How many pages does it contain?
+Are we allowed to redistribute it?
+What is its exact hash?
+This information is written in:
+data/provenance.md
+We recorded:
+the Internet Archive source for the 1942 book;
+the official NCTB 2026 book-list page;
+the official Google Drive and government eGovCloud links;
+exact page counts, sizes and hashes;
+licensing concerns.
+Because the books are link-only, the full PDFs should not be pushed to GitHub.
+4. We made the corpus reproducible
+A reproducible project means another person can obtain the same data and reproduce your result.
+The script:
+scripts/get_data.sh
+can now:
+find the PDFs attached to Kaggle;
+download them from the official sources if they are missing;
+check their hashes;
+check their expected page counts;
+convert PDF pages into page images;
+give every generated image a consistent filename;
+create a corpus inventory.
+For example:
+data/raw/bhasha_prakash_1942/page_0001.png
+data/raw/bhasha_prakash_1942/page_0002.png
+
+data/raw/nctb_bangla_grammar_2026/page_0001.png
+data/raw/nctb_bangla_grammar_2026/page_0002.png
+The raw page images are ignored by Git because they are large. A grader can recreate them using the script.
+5. We gave every book and page a stable identity
+Each book has a unique document ID:
+bhasha_prakash_1942
+nctb_bangla_grammar_2026
+Later, each page will have an ID such as:
+bhasha_prakash_1942_p0042
+nctb_bangla_grammar_2026_p0100
+This is important for citations.
+When the final system answers a question, it must be able to say:
+This answer came from:
+document = nctb_bangla_grammar_2026
+PDF page = 42
+chunk = ...
+Without stable IDs, the final RAG system would not know where retrieved text came from.
+6. We divided the books into train and test sets
+We declared:
+1942 book → train/development
+2026 NCTB book → test
+An easy analogy is:
+Train/development book = material used while building and adjusting the system.
+Test book = exam paper used to check whether the completed system works on a different book.
+We split by complete documents rather than randomly mixing pages.
+If pages from the same book appeared in both train and test sets, the test would be too easy. The system would see almost identical fonts, formatting and grammar examples during development.
+This problem is called data leakage.
+7. We inspected real pages
+EDA means Exploratory Data Analysis.
+It simply means looking at the data before building the model.
+The Kaggle notebook inspected:
+number of books;
+number of pages;
+PDF dimensions;
+page orientation;
+image brightness;
+contrast;
+proportion of dark pixels;
+sample pages from different parts of both books.
+It displayed six real pages:
+1942 book: PDF pages 10, 150 and 350
+2026 book: PDF pages 10, 42 and 100
+This helps you see differences such as:
+old letterpress versus modern printing;
+faded pages;
+ink noise;
+different page sizes;
+headings and rule lists;
+difficult Bangla conjuncts and vowel marks.
+These findings will guide the preprocessing, layout and OCR choices in later phases.
+8. We configured the project correctly
+The starter repository originally described an unrelated example project:
+Group: G00
+Domain: almanacs
+Data speciality: degraded scans
+NFR: reproducible
+We replaced that with your real project:
+Group: 20
+Project: Bangla Morphological Analyzer
+Domain: Bangla grammar and morphology
+Data speciality: Bangla script
+Primary NFR: explainable
+Success target: answer-F1 >= 0.70
+This information is stored in:
+configs/task.yaml
+grading_kit/manifest.yaml
+The manifest is like the project’s table of contents. A grader opens it to discover:
+what the project is;
+which data it uses;
+where the corpus is;
+what your targets are;
+how to build the index;
+where the labels and evaluation files live.
+9. We created initial model settings
+In:
+configs/config.yaml
+we recorded initial—not necessarily final—choices:
+GPU execution;
+classical preprocessing enabled;
+optional generative enhancement disabled;
+EasyOCR Bangla as the first OCR baseline;
+NFC Unicode normalization;
+BGE-M3 as the initial multilingual embedding candidate;
+256-token chunks with 32-token overlap;
+FAISS FlatIP as the initial vector index.
+These are starting choices. Later experiments will determine whether they should remain.
+10. The Kaggle notebook proved Phase 1 works
+The executed notebook showed:
+IMPORT SMOKE TEST: PASS
+CORPUS DISCOVERY: PASS
+CONTRACT SMOKE TEST: PASS
+WRITABLE STORAGE TEST: PASS
+CORPUS IDENTITY AND INTEGRITY: PASS
+PAGE GEOMETRY EDA: PASS
+REAL PAGE SAMPLE EDA: PASS
+DOCUMENT SPLIT DECLARATION: PASS
+PHASE 1 CORPUS INVENTORY: PASS
+This means:
+Kaggle can access the repository;
+Python can import your code;
+Kaggle can see both private PDFs;
+the files have the correct hashes;
+the page counts are correct;
+data objects work;
+Kaggle can write output artifacts;
+real page samples were inspected;
+the train/test split is declared.
+11. Why we did not calculate the word count yet
+The assignment requires at least 60,000 usable words.
+We currently record:
+words: 0
+status: pending measured OCR
+This does not mean the books contain zero words. It means we have not yet measured them honestly.
+We deliberately did not count words from the PDF’s existing text layer because:
+it may be broken;
+Bangla characters may be encoded incorrectly;
+the project requires reading page images using your OCR pipeline.
+The usable word count will be calculated after OCR:
+page images → your OCR → extracted Bangla text → measured word count
+12. Important corpus change
+A1 named the 2019 NCTB book, but your A2 implementation uses the 2026 edition.
+We documented this instead of hiding it.
+The domain, speciality, NFR and success metric remain unchanged, but the book edition changed. You should inform the instructor so A1 and A2 are not seen as accidentally inconsistent.
+What Phase 1 did not do
+Phase 1 did not:
+clean page images;
+detect page regions;
+perform OCR;
+calculate OCR accuracy;
+divide OCR text into chunks;
+generate embeddings;
+build the FAISS index;
+retrieve answers;
+build the RAG agent.
+Those are later phases.
+The final workflow currently looks like this:
+Phase 1 — completed
+Verified books and corpus information
+             ↓
+Phase 3
+Held-out pages and human transcriptions
+             ↓
+Phase 4
+Load and clean page images
+             ↓
+Phase 5
+Detect headings, rules and text regions
+             ↓
+Phase 6
+Run and evaluate Bangla OCR
+             ↓
+Phase 7
+Chunk text, create embeddings and build FAISS
+             ↓
+Phase 8
+Search the complete knowledge base
+In one sentence: Phase 1 proved exactly which books you are using, where they came from, that they are unmodified, how they are divided for development/testing, and that Kaggle can inspect them reproducibly.
+
+ME:
+since phase 1 has been done, now do phase 2 works
+
+GPT:
+Phase 2 implementation is ready in the existing [eda.ipynb](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb).
+What Phase 2 now does:
+Records Python, PyTorch, CUDA, GPU, package, and Git commit versions.
+Uses Kaggle-safe paths:Input: /kaggle/input
+Output: /kaggle/working/artifacts
+
+Adds two execution modes:Small mode: 20 pages from each PDF = 40 pages.
+Full mode: all 783 pages.
+
+Sets deterministic random seeds.
+Runs three configuration tests.
+Creates:phase2_runtime_snapshot.json
+phase2_requirements_snapshot.txt
+
+Pins the Phase 2 bootstrap dependencies.
+Does not perform OCR yet—that comes in later phases.
+What you need to do
+First commit and push these changes from your fahim branch:
+git add Makefile configs/config.yaml pyproject.toml requirements.lock scripts/set_seed.py src/doc_agent/settings.py tests/test_data.py
+git commit -m "build(kaggle): add reproducible Phase 2 runtime"
+
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): add Phase 2 runtime validation"
+
+git push origin fahim
+Then:
+Upload the updated notebooks/eda.ipynb to Kaggle.
+Attach your bma-corpus dataset.
+Enable Internet.
+Select the GPU accelerator.
+Click Run All—no cell-by-cell copying.
+Confirm these outputs appear:RUNTIME IDENTITY: PASS
+PORTABLE PATHS AND MODES: PASS
+SMALL/FULL WORK PLAN: PASS
+DETERMINISTIC SEED TEST: PASS
+3 passed
+PHASE 2 REPRODUCIBILITY SNAPSHOT: PASS
+
+Save a Kaggle version.
+Download the executed notebook and replace the local notebook.
+Commit the executed evidence:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 2 reproducibility checks"
+git push origin fahim
+The local structural checks passed. Phase 2 becomes officially complete after the saved Kaggle notebook shows all six results above.
+
+ME:
+I tried to run this cell
+test_result = run_command(
+    [sys.executable, "-m", "pytest", "tests/test_data.py", "-q"],
+    cwd=REPO_DIR,
+)
+assert "3 passed" in test_result.stdout
+print("PHASE 2 CONFIGURATION TESTS: PASS")
+
+This gave me error
+AssertionError                            Traceback (most recent call last)
+/tmp/ipykernel_58/3768643905.py in <cell line: 0>()
+      3     cwd=REPO_DIR,
+      4 )
+----> 5 assert "3 passed" in test_result.stdout
+      6 print("PHASE 2 CONFIGURATION TESTS: PASS")
+
+AssertionError:
+
+GPT:
+Your tests actually passed. The failure was caused by checking for the text "3 passed" while pytest was running in extra-quiet mode and omitted that text.
+I fixed the complete [eda.ipynb](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb). The corrected cell now checks pytest’s return code:
+test_result = run_command(
+    [sys.executable, "-m", "pytest", "tests/test_data.py"],
+    cwd=REPO_DIR,
+)
+assert test_result.returncode == 0
+print("PHASE 2 CONFIGURATION TESTS: PASS")
+Commit and push the correction:
+git add notebooks/eda.ipynb
+git commit -m "fix(notebook): use pytest return code for Phase 2 gate"
+git push origin fahim
+Then upload the updated notebook to Kaggle and run it. This cell should now print:
+3 passed
+PHASE 2 CONFIGURATION TESTS: PASS
+
+ME:
+I have downloaded and replaced the notebook, have a look
+
+GPT:
+Phase 2 has passed successfully. I verified the downloaded [eda.ipynb](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb):
+All 19 code cells ran sequentially.
+No notebook errors.
+Exact repository commit recorded: 6924bec
+Two Tesla T4 GPUs detected.
+Small mode: 40 pages.
+Full mode: 783 pages.
+Deterministic seed test passed.
+All 3 configuration tests passed.
+Runtime snapshot exported.
+Notebook source code is unchanged; Kaggle only added execution outputs and metadata.
+The google-adk dependency warning comes from Kaggle’s preinstalled environment and did not affect the project.
+Now save this execution evidence:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 2 Kaggle validation"
+git push origin fahim
+After pushing that commit, Phase 2 is officially complete.
+
+ME:
+So help me do phase 3.
+
+GPT:
+Phase 3’s automated preparation is ready. I added:
+A balanced 16-page held-out selection:8 pages from the 1942 book
+8 pages from the 2026 NCTB book
+
+Stable page IDs and labeling records in [labels.jsonl](D:/L-4,T-1/DL/doc-agent-starter/grading_kit/labels.jsonl).
+Human transcription/review instructions in [README.md](D:/L-4,T-1/DL/doc-agent-starter/grading_kit/heldout_pages/README.md).
+Held-out metadata in [manifest.yaml](D:/L-4,T-1/DL/doc-agent-starter/grading_kit/manifest.yaml).
+Complete Kaggle export, gallery, packaging, and validation cells in [eda.ipynb](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb).
+Step 1: Commit the preparation
+git add grading_kit/labels.jsonl grading_kit/heldout_pages/README.md grading_kit/manifest.yaml notebooks/eda.ipynb
+git commit -m "data(eval): prepare Phase 3 held-out labeling workflow"
+git push origin fahim
+Step 2: Run it on Kaggle
+Upload the updated notebook and click Run All.
+Expected new results:
+HELD-OUT PAGE SELECTION: PASS
+PHASE 3 LABELING BUNDLE: PASS
+HELD-OUT PAGE GALLERY: PASS
+PHASE 3 MANUAL GATE: PENDING
+PENDING is correct at this stage. The notebook cannot truthfully pass until your team manually enters the ground truth.
+Download:
+/kaggle/working/artifacts/phase3_labeling_bundle.zip
+It contains:
+16 page images rendered at 300 DPI
+labels.template.jsonl
+Page hashes
+Labeling instructions
+Selection metadata
+Step 3: Divide the human work
+Use three batches without assigning names yet:
+Batch A: 6 pages
+Batch B: 5 pages
+Batch C: 5 pages
+Each person should:
+Replace the repository’s labels.jsonl with the downloaded labels.template.jsonl.
+Fill only their allocated records.
+Read directly from the PNG—not OCR or PDF text.
+Fill:printed_page
+transcriber
+text
+notes, if necessary
+
+Commit their own lines from their own branch.
+Suggested branch names:
+phase3-labels-2105004
+phase3-labels-2105001
+phase3-labels-2105006
+Step 4: Cross-review
+The original transcriber cannot review their own pages:
+Batch A → reviewed by Batch B person
+Batch B → reviewed by Batch C person
+Batch C → reviewed by Batch A person
+The reviewer compares every character against the PNG, fills reviewer, and changes:
+"review_status": "reviewed"
+Review corrections should be separate commits so each person’s contribution is visible.
+Important rights blocker
+Your provenance declares both PDFs “link only; do not redistribute.” Therefore, the notebook creates images under Kaggle artifacts and does not copy them into the public repository.
+Ask your instructor whether the 16 page samples and full-page transcriptions may be committed for grading. Until permission or an approved private-delivery method is provided, Phase 3 cannot honestly receive its final PASS.
+After the transcriptions, reviews, and permission issue are resolved, rerun the notebook. The final result must be:
+PHASE 3 HELD-OUT LABELS: PASS
+
+ME:
+U told to divide the 16 pages into 3 batches(for 3 people). Can I do it all by myself?
+
+GPT:
+You can transcribe all 16 pages yourself, but you cannot complete Phase 3 entirely alone.
+The Phase 3 requirements say every transcription must be checked by a second person. Therefore:
+You can be transcriber for all 16 pages.
+Nahid and Junaid can each review eight pages.
+The reviewer must differ from the transcriber.
+Reviewers should commit their corrections from their own Git accounts.
+A valid distribution could be:
+Work    Person
+Select/export pages and transcribe all 16    Fahim
+Review pages 1–8    One teammate
+Review pages 9–16    Other teammate
+
+For your records:
+"transcriber": "Fahim Ishtiak",
+"reviewer": "Nahid Hossain Redom",
+"review_status": "reviewed"
+The next eight can use Junaid as reviewer.
+This approach is valid because you perform the main transcription work while two independent reviewers verify it. Doing both transcription and review yourself would fail the independent-review requirement and give your teammates no Phase 3 commit evidence.
+
+ME:
+Tell me what to do from step 3. Besides I question..will copy the contents from labels.template.jsonl and paste it to labels.jsonl ?
+
+GPT:
+Yes—replace the entire contents of grading_kit/labels.jsonl with the contents of labels.template.jsonl.
+Do not append the template below the existing records, or you will have 32 duplicate records.
+Assuming you downloaded and extracted phase3_labeling_bundle.zip, continue as follows.
+3.1 Replace the labels file
+Copy:
+labels.template.jsonl
+to:
+grading_kit/labels.jsonl
+Rename it to labels.jsonl and overwrite the existing file.
+The downloaded template is better because it contains the actual generated image hashes and sizes.
+3.2 Understand one label record
+Each line represents one page:
+{
+  "page_id": "bhasha_prakash_1942_p0050",
+  "pdf_page": 50,
+  "printed_page": "",
+  "transcriber": "",
+  "reviewer": "",
+  "review_status": "pending",
+  "text": "",
+  "notes": ""
+}
+Only edit these fields initially:
+printed_page
+transcriber
+text
+notes
+Do not change:
+page_id
+doc_id
+pdf_page
+source_split
+image_filename
+image_sha256
+image_bytes
+render_dpi
+categories
+3.3 Transcribe each page
+Open the corresponding PNG from the downloaded heldout_pages folder.
+For example:
+bhasha_prakash_1942_p0050.png
+Then edit its matching JSONL record:
+"printed_page": "২৬",
+"transcriber": "Fahim Ishtiak",
+"reviewer": "",
+"review_status": "pending",
+"text": "The complete manually typed Bengali page text goes here.",
+"notes": ""
+Important rules:
+Type what is printed in the PNG.
+Do not use OCR output.
+Preserve original spelling.
+Preserve Bengali digits.
+Preserve punctuation and examples.
+Do not correct old spelling.
+For line breaks, type \n inside the JSON string.
+Keep each JSON record on one physical line.
+Example:
+"text": "প্রথম মুদ্রিত লাইন।\nদ্বিতীয় মুদ্রিত লাইন।"
+For tables, transcribe row-by-row, from left to right:
+"text": "শিরোনাম\nকলাম ১ | কলাম ২ | কলাম ৩\nপ্রথম সারি..."
+If a character genuinely cannot be read:
+"notes": "Line 12, final conjunct is unclear"
+Do not guess. Leave the status pending until a reviewer resolves it.
+If a page has no visible printed number:
+"printed_page": "unprinted",
+"notes": "No printed folio visible on this page"
+3.4 Work in smaller commits
+Since you are transcribing all 16 pages, make several meaningful commits:
+git add grading_kit/labels.jsonl
+git commit -m "data(eval): transcribe held-out pages 1 through 4"
+git push origin fahim
+Then pages 5–8:
+git add grading_kit/labels.jsonl
+git commit -m "data(eval): transcribe held-out pages 5 through 8"
+git push origin fahim
+Continue similarly for pages 9–12 and 13–16.
+3.5 Validate the JSONL format
+Run this after editing:
+python -c "import json,pathlib; p=pathlib.Path('grading_kit/labels.jsonl'); rows=[json.loads(x) for x in p.read_text(encoding='utf-8').splitlines() if x.strip()]; print(f'VALID: {len(rows)} records')"
+Expected:
+VALID: 16 records
+If it reports a JSON error, common causes are:
+Pressing Enter inside the text string instead of using \n.
+An unescaped double quote inside the transcription.
+Missing a comma.
+Accidentally joining two records.
+3.6 Independent review
+Privately share the extracted page images with Nahid and Junaid.
+Suggested review division:
+Nahid reviews records 1–8.
+Junaid reviews records 9–16.
+Each reviewer should:
+Compare the transcription with the PNG character by character.
+Correct mistakes directly.
+Fill their full name.
+Change the status to reviewed.
+Example:
+"transcriber": "Fahim Ishtiak",
+"reviewer": "Nahid Hossain Redom",
+"review_status": "reviewed"
+They should commit their reviews using their own Git accounts:
+git add grading_kit/labels.jsonl
+git commit -m "data(eval): review held-out transcriptions 1 through 8"
+git push
+3.7 Page images and permission
+Do not copy the PNG files into the public repository yet. Your provenance currently says the books are link-only.
+First ask the instructor whether these 16 evaluation page samples can be committed. If permission is granted, copy the PNGs into:
+grading_kit/heldout_pages/
+After all transcriptions and reviews are merged, rerun the notebook. The final required output is:
+PHASE 3 HELD-OUT LABELS: PASS
+
+ME:
+Are u out of your mind?  Each page contains 20-30 lines written in bengali . How am I supposed to write those bengali things line by line of 16 pages,
+
+GPT:
+You’re right. My earlier instruction was unreasonable. Do not type 16 Bengali pages from scratch.
+I revised Phase 3:
+Reduced the set from 16 to the minimum 12 pages.
+Added EasyOCR Bangla draft generation.
+The text field will already contain OCR text.
+You only correct OCR mistakes while comparing against the PNG.
+human_verified prevents raw OCR from passing as ground truth.
+A teammate still reviews the corrected text.
+EasyOCR 1.7.2 is pinned from its stable PyPI release.
+What to do now
+Commit and push the revised workflow:
+git add notebooks/eda.ipynb grading_kit/labels.jsonl grading_kit/manifest.yaml grading_kit/heldout_pages/README.md pyproject.toml requirements.lock
+git commit -m "fix(data): add OCR-assisted Phase 3 labeling"
+git push origin fahim
+Upload the updated notebook to Kaggle and run all cells. It will report:
+HELD-OUT PAGE SELECTION: PASS
+PHASE 3 PAGE RENDER: PASS
+PHASE 3 OCR TYPING DRAFTS: PASS
+HELD-OUT PAGE GALLERY: PASS
+PHASE 3 MANUAL GATE: PENDING
+Download the newly generated:
+/kaggle/working/artifacts/phase3_labeling_bundle.zip
+Discard the old 16-page bundle.
+Replace grading_kit/labels.jsonl with the new labels.template.jsonl. This new file will contain 12 records where:
+"ocr_draft": "Automatically generated Bengali text...",
+"text": "Automatically generated Bengali text...",
+"human_verified": false
+You do not need to copy or type the text. Just correct errors inside text, then set:
+"printed_page": "visible page number",
+"transcriber": "Fahim Ishtiak",
+"human_verified": true
+Leave ocr_draft unchanged—it records what EasyOCR originally produced, allowing you to show exactly what humans corrected.
+Some human checking is unavoidable because the assignment specifically requires ground truth rather than raw OCR. But now the job is proofreading 12 drafts, not typing 16 pages from zero.
+
+ME:
+Besides I thing I need u to remember, Fahim's ID is 2105004, Nahid's 2105001 and Junaid's 2105006. We have to use our ID instead of our names
+
+GPT:
+Understood. I’ll use student IDs in all records and instructions:
+Fahim: 2105004
+Nahid: 2105001
+Junaid: 2105006
+I updated the notebook validator so names or unknown IDs will be rejected.
+Your label records should look like:
+"transcriber": "2105004",
+"reviewer": "2105001"
+For pages reviewed by Junaid:
+"transcriber": "2105004",
+"reviewer": "2105006"
+The transcriber and reviewer IDs cannot be the same.
+
+ME:
+I ran the notebook ( still didn't replaced it here) and I manually checked the OCR . The nctb book is recent and its print is very good and thats why its OCR text is correct but bhasha prakash is old book and I saw some pages print and not so good quality as a result the OCR text has errors...is there anything/ any better OCR model that can make it less error ? Help me
+
+GPT:
+Yes—the old book needs a different OCR path. I updated the notebook to use:
+NCTB pages: EasyOCR, since it already works well.
+1942 pages: contrast enhancement followed by Qwen/Qwen3-VL-4B-Instruct.
+Both outputs are retained:easyocr_draft
+qwen3_vl_draft
+
+The Qwen draft is prefilled into text for historical pages, but still requires checking.
+Qwen3-VL is designed for multilingual document OCR, including degraded, blurred, tilted, and older text. The 4B version is a reasonable experiment on your two T4 GPUs. Qwen model card, official implementation.
+PaddleOCR was not selected because its current official language table does not list Bengali. PaddleOCR languages.
+What to do
+Commit and push the upgraded OCR workflow:
+git add configs/config.yaml grading_kit/heldout_pages/README.md notebooks/eda.ipynb pyproject.toml requirements.lock
+git commit -m "feat(ocr): add Qwen3-VL fallback for historical pages"
+git push origin fahim
+Then upload the updated notebook to Kaggle and run all cells. The first Qwen run will download a large model, so expect it to take longer.
+The additional expected result is:
+HISTORICAL QWEN3-VL OCR FALLBACK: PASS
+Download the newly generated:
+/kaggle/working/artifacts/phase3_labeling_bundle.zip
+Discard the previous bundle.
+For each historical record, you will see something like:
+"easyocr_draft": "...",
+"qwen3_vl_draft": "...",
+"draft_selected_engine": "Qwen/Qwen3-VL-4B-Instruct",
+"text": "..."
+Compare text with the page image and correct only the remaining errors. Do not delete either raw draft—they provide evidence for later OCR comparison.
+This should reduce your work substantially, but Qwen is still experimental: it can occasionally invent plausible-looking words. The page image remains the authority, especially for matras, hasanta, conjuncts, Bengali digits, and old spellings.
+
+ME:
+The performance on Bhasha prokash is much better than the previous output but still there some error exists. Are there any better model we can use? (If not then we need to proceed with what we have)
+
+GPT:
+Yes—there is one worthwhile upgrade: Qwen/Qwen3-VL-8B-Instruct instead of the current 4B model. It should fit across Kaggle’s two T4 GPUs using float16 and device_map="auto". Qwen’s official model card highlights improved OCR for degraded images and rare/older characters, though no Bengali historical-print benchmark guarantees a specific improvement. Qwen3-VL-8B model card
+My recommendation:
+Test the 8B model on the two worst Bhasha Prakash pages.
+Compare its output manually with the existing 4B output.
+If clearly better, use 8B for all six historical pages.
+If the improvement is small, keep the existing output and begin manual correction.
+I would not recommend:
+PaddleOCR-VL: its official 109-language list currently does not include Bengali. Supported languages
+dots.mocr: promising multilingual document OCR, but there is no convincing Bengali historical-print evidence yet. dots.mocr repository
+Qwen3-VL-32B: likely too slow and memory-fragile on Kaggle’s two T4 GPUs.
+Most importantly, no OCR model will perfectly recover every damaged Bengali character. In Phase 3, OCR output is only a draft. The final text must be manually corrected by looking at the page image, then marked human_verified=true.
+So we should try 8B once, but stop model-hunting after that. If it still has some errors, manually correct those errors and proceed with the project.
+
+ME:
+Okay , go ahead ..final model hunting
+
+GPT:
+Done. The complete notebook now uses Qwen3‑VL 8B for all six Bhasha Prakash pages. [Open the updated notebook](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb).
+Changes include:
+Historical OCR upgraded from 4B to Qwen/Qwen3-VL-8B-Instruct.
+NCTB pages still use EasyOCR.
+New output field: qwen3_vl_8b_draft.
+Generates FINAL_MODEL_REVIEW.md with page images and OCR outputs.
+Produces a new phase3_labeling_bundle.zip.
+The 8B output is prefilled into text, ready for manual correction.
+In Kaggle:
+Enable GPU T4 ×2.
+Enable Internet.
+Upload/replace the notebook.
+Choose Run All.
+Look for:
+HISTORICAL QWEN3-VL 8B FINAL OCR CANDIDATE: PASS
+Download phase3_labeling_bundle.zip.
+Examine FINAL_MODEL_REVIEW.md.
+The notebook structure and code syntax passed validation. Full execution requires Kaggle because the local environment has no GPU or pytest installation.
+After a successful Kaggle run, replace your local executed notebook and tell me. Then we will stop model hunting and begin the final human correction workflow.
+
+ME:
+should I commit these now?
+
+GPT:
+Yes. Commit these source changes now, then make a separate commit after the successful Kaggle execution.
+git config user.name "2105004"
+
+git add configs/config.yaml grading_kit/heldout_pages/README.md notebooks/eda.ipynb
+
+git commit -m "feat(ocr): evaluate Qwen3-VL 8B on historical pages"
+
+git push origin fahim
+After Kaggle runs successfully and you replace the notebook, create another commit:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Qwen3-VL 8B OCR run"
+git push origin fahim
+Do not commit the generated labels as final yet—they still require human correction and independent review.
+
+ME:
+Performance are much better now , I have replaced the notebook, I copied the contents to the labels.jsonl file....go through and tell me if there is anything left to do
+
+GPT:
+The 8B OCR run is successful, but Phase 3 is not finished yet.
+What passed:
+All 25 notebook code cells executed.
+No notebook errors.
+12 valid JSONL records: 6 historical + 6 NCTB.
+Qwen3‑VL 8B processed all historical pages.
+EasyOCR processed all NCTB pages.
+Selection, rendering, OCR, and gallery checks passed.
+What remains:
+Human-correct text
+Currently all 12 text values are identical to ocr_draft. Check every line against its PNG and correct only text. Preserve ocr_draft, easyocr_draft, and qwen3_vl_8b_draft.
+
+Complete metadata
+All 12 currently have:
+Empty printed_page
+Empty transcriber
+Empty reviewer
+review_status: "pending"
+human_verified: false
+After correction, use:
+
+"printed_page": "visible printed page number",
+"transcriber": "2105004",
+"reviewer": "2105001",
+"review_status": "reviewed",
+"human_verified": true
+The reviewer must be a different person. Valid IDs are 2105004, 2105001, and 2105006.
+Perform independent review
+A sensible distribution is four pages per person, followed by rotation:
+2105004 transcriptions reviewed by 2105001
+2105001 transcriptions reviewed by 2105006
+2105006 transcriptions reviewed by 2105004
+Resolve page-image permission
+Currently 0 of the 12 PNG files are in grading_kit/heldout_pages/. Phase 3 requires each label to map to its PNG.
+Only copy and commit these images if your instructor confirms that selected page samples may be included publicly. If permission is denied, tell me—we must modify the submission method instead of publishing copyrighted pages.
+Commit the current generated evidence
+You can commit the executed notebook and draft labels now:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Qwen3-VL 8B OCR run"
+
+git add grading_kit/labels.jsonl
+git commit -m "data(eval): add OCR-assisted draft labels"
+
+git push origin fahim
+Later, human corrections and reviews should be separate commits by the people who performed them.
+The notebook’s saved PHASE 3 MANUAL GATE: PENDING is expected—it ran before you copied the new labels. Once correction, review, metadata, and permitted images are complete, rerun the gate. After it reports PHASE 3 HELD-OUT LABELS: PASS, Phase 3 is finished and we can begin Phase 4.
+
+ME:
+Fill the transcriber to 2105004 , then 1st 6 pages reviewer to 2105001 and last 6 pages to 2105006, write review status to reviewed, set true to huamn verified ...and I need to know what should be enteren in printed page field
+
+GPT:
+Updated [labels.jsonl](D:/L-4,T-1/DL/doc-agent-starter/grading_kit/labels.jsonl):
+All transcribers: 2105004
+First six reviewers: 2105001
+Last six reviewers: 2105006
+All review_status: "reviewed"
+All human_verified: true
+JSONL and Unicode validation passed.
+printed_page means the number physically printed on the book page, not its PDF index. I inspected the original pages and entered:
+PDF page    Printed page
+Bhasha 50    28 (inferred; folio omitted)
+Bhasha 90    68
+Bhasha 130    108
+Bhasha 170    148
+Bhasha 290    268
+Bhasha 410    388
+NCTB 20    5
+NCTB 30    15
+NCTB 35    20
+NCTB 45    30
+NCTB 60    45
+NCTB 75    60
+
+Important: these fields now state that real human verification and independent review occurred. Nahid (2105001) and Junaid (2105006) must actually examine their assigned pages, and any remaining OCR errors must be corrected in text. Currently every text still exactly equals its OCR draft, so do not treat Phase 3 as genuinely complete until that checking happens.
+
+ME:
+I have corrected the printed page number, it ok now,,,now is there anything left for phase 3?
+
+GPT:
+Phase 3 is not complete yet. The printed-page numbers and metadata now pass, but three items remain:
+Correct the transcription text
+All 12 text fields are still exactly identical to ocr_draft. At least bhasha_prakash_1942_p0090 contains an invalid   character. Each assigned reviewer must compare the text against the PNG and correct remaining errors.
+
+Update the notes
+Every record still says "human correction pending". Change this only after genuine correction/review, for example:
+
+"notes": "OCR-assisted transcription manually corrected and independently reviewed"
+Add the held-out PNGs
+All 12 images are currently missing from grading_kit/heldout_pages/. Matching images are available here:
+
+C:\Users\Fahim\Downloads\artifacts\phase3_labeling_bundle\heldout_pages
+Their hashes match the labels. However, copy and commit them only after confirming that these selected page samples may be included in the public repository.
+After completing those steps:
+Rerun the final Phase 3 notebook cell.
+Confirm it prints PHASE 3 HELD-OUT LABELS: PASS.
+Commit the reviewed labels and permitted images.
+Merely assigning reviewer IDs and setting reviewed/true does not replace the actual independent review.
+
+ME:
+I have the correct bhasha prokash text. It has been attached/pasted in this prompt.
+Now now copy them and replace with them in the jsonl file,
+
+GPT:
+Done. All six Bhasha Prakash text fields in [labels.jsonl](D:/L-4,T-1/DL/doc-agent-starter/grading_kit/labels.jsonl) now exactly match the attached transcription.
+Validation results:
+Six historical transcriptions replaced.
+OCR draft fields preserved for evaluation.
+NCTB records unchanged.
+No invalid   characters.
+Unicode NFC validation passed.
+All 12 held-out images are present with matching hashes.
+Phase 3 structural gate: PASS.
+Still do these final administrative steps:
+Ensure 2105001 and 2105006 genuinely review their assigned records.
+Rerun the final Phase 3 notebook cell to record PHASE 3 HELD-OUT LABELS: PASS.
+Commit the corrected labels and permitted PNG files:
+git add grading_kit/labels.jsonl grading_kit/heldout_pages/*.png
+git commit -m "data(eval): add reviewed ground-truth transcriptions"
+git push origin fahim
+
+ME:
+Lets proceed to phase 4
+
+GPT:
+Phase 4 implementation is ready.
+Implemented:
+Deterministic page loading and stable IDs
+Per-document small-mode limits
+Blank-page detection
+Verified cover/credits/back-cover exclusions
+Deskewing, median denoising, and Otsu binarization
+Raw-image preservation
+Processed output under Kaggle artifacts
+Five Phase 4 ingest tests
+Standalone Phase 4 notebook section
+Before/after gallery and ink-retention report
+Phase 4 design-choice documentation
+Local validation:
+9 focused tests passed
+Six real pages processed successfully
+Raw files remained unchanged
+Bengali strokes appeared preserved
+No Qwen or OCR model was loaded
+Commit and push first:
+git add configs/config.yaml configs/design_choices.md data/provenance.md pyproject.toml src/doc_agent/ingest/loader.py src/doc_agent/ingest/preprocess.py tests/test_ingest.py notebooks/eda.ipynb
+
+git commit -m "feat(ingest): implement Phase 4 page preprocessing"
+
+git push origin fahim
+Then in Kaggle:
+Replace/upload [eda.ipynb](D:/L-4,T-1/DL/doc-agent-starter/notebooks/eda.ipynb).
+Internet should be enabled; GPU is unnecessary.
+Do not select Run All.
+Start at Phase 4 — Page ingest and classical preprocessing.
+Run Phase 4 code cells 25–28 in order.
+Confirm:
+PHASE 4 INGEST TESTS: PASS
+PHASE 4 REAL-PAGE SMALL-MODE INGEST: PASS
+PHASE 4 CLASSICAL PREPROCESSING: PASS
+PHASE 4 BEFORE/AFTER GALLERY: READY FOR HUMAN CHECK
+Inspect the final gallery and ensure Bengali matras, hasanta, conjuncts, digits, and table lines remain visible. Then download and replace the executed notebook.
+
+ME:
+I have replaced the notebook. Is there anything more to do for phase 4. Have a look
+
+GPT:
+Phase 4 is complete.
+Verified:
+All five ingest/preprocessing tests passed.
+Deterministic small-mode loading passed on six real pages.
+Raw images remained unchanged.
+Processed files were written separately.
+Ink-retention ratios were safe: approximately 1.07–1.14.
+The gallery preserves Bengali matras, conjunct strokes, digits, and table lines.
+All 29 notebook code cells executed.
+No runtime or syntax errors.
+Kaggle did not alter any notebook source code.
+Only commit the executed notebook:
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 4 preprocessing validation"
+git push origin fahim
+No generated preprocessing artifacts need to be committed; the notebook contains the necessary evidence. After this commit, proceed to Phase 5: layout detection and reading order.
+
+ME:
+I'm done upto phase 4, now I want to handover the work to redom(2105001). So write me a md file covering what has been done till now and what to do next(though we have A2_plan and its enough) so that he can get a better context. Plus most importantly, is there anything i need to complete or do individually before handing over?
+
+GPT:
+Created [HANDOVER_TO_2105001.md](D:/L-4,T-1/DL/doc-agent-starter/HANDOVER_TO_2105001.md).
+It covers:
+Actual repository and Git state
+Completed work from Phases 0–4
+Corpus and fixed project decisions
+Important files and successful evidence
+Exact Phase 5 starting workflow
+Kaggle instructions
+Known pending issues
+Later phase ordering
+Checklists for both 2105004 and 2105001
+Before handing over, you personally should complete these:
+Commit the handover:
+git add HANDOVER_TO_2105001.md
+git commit -m "docs(handover): transfer A2 context to 2105001"
+git push origin fahim
+Open a PR from fahim to main, ask 2105001 to review it, and use Create a merge commit—not squash. Currently main does not contain your 17 Phase 0–4 commits.
+
+Ask 2105001 to genuinely review the first six held-out transcriptions because those records name them as reviewer.
+
+Add your authentic AI transcript:
+
+transcripts/2105004.txt
+This is currently missing. It should contain the required header, relevant full conversation, and your personal reflection.
+Ensure your GitHub account recognizes fahimishtiak2001@gmail.com. No history rewriting is necessary.
+
+Inform the team about these later cleanup items:
+Confirm the NCTB 2019→2026 revision with the instructor.
+Resolve the public held-out-page rights wording.
+Update the stale Phase 3 status in grading_kit/manifest.yaml.
+Replace the pending corpus word count during Phase 6.
+
+Your Phase 0–4 implementation work itself is complete. The main personal blockers are the PR/merge, your transcript, and ensuring the recorded review actually happens.
+
+REFLECTION
+==========
+
+This conversation supported my work from the initial interpretation of the A2
+requirements through the completion and handover of Phases 0-4. I used the AI
+primarily as a planning, implementation, debugging, and verification assistant.
+Its suggestions were treated as proposals to be checked against the assignment
+documents, repository state, Kaggle output, automated tests, and manual visual
+inspection.
+
+What I accepted
+---------------
+
+I accepted the dependency-ordered phase structure because it made the project
+workflow clearer than assigning large, overlapping components to individuals at
+the beginning. I also accepted the Kaggle-first execution workflow, the use of
+student numbers in contribution metadata, the reproducible configuration and
+testing gates, and the separation of source-code commits from executed-notebook
+evidence. For Phase 3, I accepted an OCR-assisted ground-truth workflow in which
+machine output provides a draft but humans remain responsible for correction and
+independent review. I accepted Qwen3-VL 8B for the degraded historical pages only
+after comparing its output with the earlier OCR results. For Phase 4, I accepted
+deterministic page loading and conservative classical preprocessing because the
+tests and before/after gallery showed that the original images remained intact
+and important Bengali strokes were preserved.
+
+What I changed
+--------------
+
+The first plan assigned fixed components to named team members. I requested that
+it be reorganized into project phases so that responsibility could be allocated
+later while still preserving individual commit evidence. I changed the original
+local-notebook assumption to a Kaggle workflow because that is the environment
+the group will use. The OCR strategy also changed during experimentation: a
+single baseline was not equally suitable for the clean modern NCTB book and the
+degraded 1942 Bhasha Prakash pages, so the workflow was adapted by document
+quality. I replaced imperfect OCR text with manually checked reference text for
+the historical held-out pages and corrected page metadata before accepting the
+Phase 3 validation result. I also requested a complete notebook whenever repeated
+cell-by-cell copying made execution unnecessarily error-prone.
+
+What I rejected
+---------------
+
+I rejected the idea of manually typing every Bengali line of all held-out pages
+from scratch because it was inefficient and increased the chance of introducing
+new transcription errors. Instead, OCR drafts were generated and then checked
+against the page images. I did not accept the first OCR result merely because the
+notebook executed successfully; the historical pages were inspected manually,
+and a stronger model was evaluated before the final drafts were chosen. I also
+did not treat metadata flags such as `reviewed` and `human_verified` as substitutes
+for genuine review. The assigned reviewers still need to inspect their pages.
+Finally, I did not commit generated Kaggle preprocessing artifacts when the
+repository only needed reproducible code and notebook evidence.
+
+Overall assessment
+------------------
+
+The AI accelerated repository inspection, code generation, notebook preparation,
+debugging, and checklist creation, but the important decisions were based on
+observable evidence. I supplied the corpus details, chose the Kaggle environment,
+inspected OCR quality, provided corrected historical text, fixed printed-page
+metadata, ran the notebooks, reviewed the visual preprocessing output, and kept
+the work divided into meaningful commits. The main lesson was that successful
+execution is not sufficient evidence of quality: OCR text, page metadata,
+preprocessing output, and contribution records each require separate validation.

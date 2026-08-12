@@ -1,14 +1,109 @@
-# THE place you set models & parameters. Code reads only from here.
+# Runtime/model choices. Phase 6/7 experiments may change model choices, but every
+# final value must match the executed kb_demo notebook.
 seed: 42
-device: cuda
+device: "cuda"
 
-enhance:   {enabled: true,  model: "unet_small", type: "diffusion"}   # or "vae" / "none"
-layout:    {model: "detectron2:layout", score_thr: 0.5}
-ocr:       {model: "microsoft/trocr-base-printed", finetune: true}    # BASELINE = pretrained OCR
-embed:     {model: "sentence-transformers/all-MiniLM-L6-v2", dim: 384}
-index:     {type: "faiss:hnsw", chunk_tokens: 256, overlap: 32}
-retrieve:  {k: 10, k_step: 10, k_max: 40, weak_threshold: 0.35, rerank: true, reranker: "cross-encoder/ms-marco-MiniLM-L6-v2"}   # k_step/k_max/weak_threshold drive evidence-gated re-search
-agent:     {max_steps: 8, autonomy: "act-with-approval", budget_usd: 0.05}
-rl:        {algo: "ppo", train_policy: false}                         # bonus: set true
-serve:     {batch: true}
-deploy:    {target: "hf-spaces"}
+runtime:
+  mode: "small"
+  small_max_pages: 20
+  input_root_env: "DOC_AGENT_INPUT_ROOT"
+  data_dir_env: "DOC_AGENT_DATA_DIR"
+  artifact_dir_env: "DOC_AGENT_ARTIFACT_DIR"
+  mode_env: "DOC_AGENT_RUN_MODE"
+  max_pages_env: "DOC_AGENT_SMALL_MAX_PAGES"
+
+data:
+  raw_dir: "data/raw"
+  interim_dir: "data/interim"
+  artifact_dir: "artifacts"
+  render_dpi: 300
+  split_by: "document"
+
+ingest:
+  supported_extensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"]
+  exclude_blank: true
+  blank_foreground_threshold: 245
+  blank_min_foreground_fraction: 0.0005
+  # Verified title/credits/back-cover pages. Blank pages are handled
+  # automatically; contents, prefaces, grammar text, and exercises remain.
+  exclude_page_ids:
+    - "bhasha_prakash_1942_p0001"
+    - "bhasha_prakash_1942_p0003"
+    - "nctb_bangla_grammar_2026_p0001"
+    - "nctb_bangla_grammar_2026_p0002"
+    - "nctb_bangla_grammar_2026_p0003"
+    - "nctb_bangla_grammar_2026_p0218"
+
+preprocess:
+  deskew: true
+  denoise: true
+  binarize: true
+  preserve_originals: true
+  output_dir: null
+  deskew_max_angle: 3.0
+  deskew_min_angle: 0.15
+  deskew_coarse_step: 1.0
+  deskew_fine_step: 0.25
+  binarize_threshold_offset: 0
+
+# Generative repair is optional for the Bangla-script profile. Classical
+# preprocessing stays enabled; learned enhancement stays off until an ablation
+# proves that it improves held-out OCR quality.
+enhance:
+  enabled: false
+  model: null
+  type: "none"
+
+layout:
+  model: "heuristic-baseline"
+  score_thr: 0.5
+  reading_order: "top-to-bottom-left-to-right"
+
+ocr:
+  model: "easyocr:bn"
+  finetune: false
+  unicode_normalization: "NFC"
+  preserve_raw_text: true
+  historical_fallback:
+    enabled: true
+    model: "Qwen/Qwen3-VL-8B-Instruct"
+    apply_to_doc_ids: ["bhasha_prakash_1942"]
+  vlm_fallback:
+    enabled: false
+    model: "Qwen/Qwen2.5-VL-7B-Instruct"
+
+embed:
+  model: "BAAI/bge-m3"
+  dim: 1024
+  normalize: true
+  batch_size: 32
+
+index:
+  type: "faiss:flatip"
+  path: "artifacts/index"
+  chunk_tokens: 256
+  overlap: 32
+  rule_aware: false
+
+retrieve:
+  k: 8
+  k_step: 8
+  k_max: 32
+  weak_threshold: 0.35
+  rerank: false
+  reranker: "BAAI/bge-reranker-v2-m3"
+
+agent:
+  max_steps: 8
+  autonomy: "read-only"
+  budget_usd: 0.05
+
+rl:
+  algo: "ppo"
+  train_policy: false
+
+serve:
+  batch: true
+
+deploy:
+  target: "hf-spaces"
