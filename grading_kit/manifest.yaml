@@ -44,6 +44,11 @@ corpus:
 heldout:
   pages_dir: "grading_kit/heldout_pages/"
   labels: "grading_kit/labels.jsonl"
+  selected_pages: 16
+  render_dpi: 300
+  excluded_from_training_and_tuning: true
+  label_status: "pending manual transcription and independent review"
+  redistribution_status: "instructor permission required before public commit"
 
 entrypoints:
   build_index: "scripts/build_index.sh"
