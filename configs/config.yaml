@@ -19,11 +19,32 @@ data:
   render_dpi: 300
   split_by: "document"
 
+ingest:
+  supported_extensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"]
+  exclude_blank: true
+  blank_foreground_threshold: 245
+  blank_min_foreground_fraction: 0.0005
+  # Verified title/credits/back-cover pages. Blank pages are handled
+  # automatically; contents, prefaces, grammar text, and exercises remain.
+  exclude_page_ids:
+    - "bhasha_prakash_1942_p0001"
+    - "bhasha_prakash_1942_p0003"
+    - "nctb_bangla_grammar_2026_p0001"
+    - "nctb_bangla_grammar_2026_p0002"
+    - "nctb_bangla_grammar_2026_p0003"
+    - "nctb_bangla_grammar_2026_p0218"
+
 preprocess:
   deskew: true
   denoise: true
   binarize: true
   preserve_originals: true
+  output_dir: null
+  deskew_max_angle: 3.0
+  deskew_min_angle: 0.15
+  deskew_coarse_step: 1.0
+  deskew_fine_step: 0.25
+  binarize_threshold_offset: 0
 
 # Generative repair is optional for the Bangla-script profile. Classical
 # preprocessing stays enabled; learned enhancement stays off until an ablation

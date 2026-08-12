@@ -65,6 +65,25 @@ A1 named the 2019 NCTB edition. The A2 implementation uses the team's available 
 
 Drop covers, blank versos, scan targets/barcodes, accession-only pages, and imprint/credits pages when they contain no grammar content. Keep exercise pages but label them as exercises so distractor options cannot become sole evidence for a definition. Record the exact raw-to-usable page difference after ingest.
 
+The Phase 4 loader automatically removes only near-blank pages using the conservative
+thresholds recorded in `configs/config.yaml`. Non-blank exclusions are explicit stable
+page IDs in `ingest.exclude_page_ids`; this prevents an image heuristic from silently
+discarding grammar content. Small mode applies its page limit per document after these
+exclusions.
+
+The explicitly inspected non-content exclusions are:
+
+- `bhasha_prakash_1942_p0001` — title/cover page;
+- `bhasha_prakash_1942_p0003` — dedication/publication front matter;
+- `nctb_bangla_grammar_2026_p0001` — front cover;
+- `nctb_bangla_grammar_2026_p0002` — title page;
+- `nctb_bangla_grammar_2026_p0003` — publication/credits page;
+- `nctb_bangla_grammar_2026_p0218` — back cover.
+
+Blank PDF pages such as the early blank versos are not duplicated in this list because
+the recorded blank-page rule handles them. Contents, prefaces, grammar text, examples,
+and exercises remain available to the pipeline.
+
 ## Scan and script difficulty
 
 - Bangla conjuncts such as `দ্ব`, `ক্ষ`, `ঞ্চ`, `ষ্ঠ`, and `স্ক`.
