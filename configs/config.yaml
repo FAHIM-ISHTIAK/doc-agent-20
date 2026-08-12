@@ -43,6 +43,10 @@ ocr:
   finetune: false
   unicode_normalization: "NFC"
   preserve_raw_text: true
+  historical_fallback:
+    enabled: true
+    model: "Qwen/Qwen3-VL-4B-Instruct"
+    apply_to_doc_ids: ["bhasha_prakash_1942"]
   vlm_fallback:
     enabled: false
     model: "Qwen/Qwen2.5-VL-7B-Instruct"
