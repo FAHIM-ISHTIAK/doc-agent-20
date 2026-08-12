@@ -18,7 +18,9 @@ JSONL transcription template at:
    place the corrected text in `text`; never treat the unreviewed draft as
    ground truth. Preserve printed spelling, Bengali digits, punctuation,
    examples, and table reading order. Use `\n` for visible line breaks.
-   The historical pages include both `easyocr_draft` and `qwen3_vl_draft`;
+   The historical pages include `easyocr_draft`, `qwen3_vl_8b_draft`, and the
+   compatibility alias `qwen3_vl_draft`; `qwen3_vl_4b_draft` is retained when
+   an earlier 4B result is present.
    `ocr_draft` records the candidate pre-filled into `text`. Check the image,
    not agreement between the models, when deciding the correct character.
 3. Record the visible folio in `printed_page`. It is separate from `pdf_page`.
