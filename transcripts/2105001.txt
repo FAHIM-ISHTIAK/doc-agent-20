@@ -1,0 +1,214 @@
+A2 AI-ASSISTED WORK TRANSCRIPT
+=============================
+
+Member name: Nahid Hossain Redom
+Student number: 2105001
+Sections led (current A2 mapping): Section 2 (page/text structure); Section 3
+(layout, OCR, and chunking options); Section 4 (layout, OCR, and chunking
+implementation); Section 5 (OCR quality and corpus coverage evidence); Section
+7 (Stage 2, Stage 3, and chunking design choices); Section 8 (this individual
+AI-work record). Supporting implementation covered Phases 5 and 6 and the
+chunking portion of Phase 7.
+
+CONVERSATION SUMMARY (NON-VERBATIM)
+==================================
+
+ME:
+Read the Phase 5-7 plan and the handover from 2105004. Phases 0-4 are already
+complete. I intend to complete layout, Bangla OCR, and the chunking part of
+Phase 7. The books are Bengali grammar books, so chunks must retain page
+citations, rule numbers, grammatical definitions, and examples. I have not
+created my branch yet. The autograder and commit history are important. I also
+need a transcript. Do not overengineer the solution.
+
+AI:
+I inspected the actual repository before proposing work. Main was clean at the
+Phase 0-4 merge commit, the fixed Pydantic contracts and pipeline order were
+still intact, and layout, OCR, and index chunking were unimplemented stubs. The
+handover required deterministic layout, measured OCR on 12 held-out pages, NFC
+normalization, and both a fixed 256-token/32-overlap chunk baseline and a
+rule-aware strategy. The A2 form requires notebook-backed measurements and one
+transcript per member.
+
+I recommended one branch, `2105001/phases-5-7`, with separate meaningful
+commits. The selected chunking design was hierarchical and rule-aware: keep a
+numbered grammar rule or definition with its examples, preserve tables as
+units, carry the ordered union of canonical PDF page IDs, and fall back to
+fixed overlapping windows for unstructured or oversized text. Embeddings and
+FAISS were left for the remaining Phase 7 owner.
+
+ME:
+Can you run commands as if I run them, without being a repository contributor?
+I also want a clean Kaggle workflow. I do not want Kaggle to make Git commits.
+Will Kaggle understand the repository test paths?
+
+AI:
+The local Git identity was already configured as Nahid Hossain Redom with the
+GitHub-linked 2105001 email, so local commits use that identity. Pushing uses
+the machine's authenticated GitHub credentials. Kaggle version history is
+separate from Git history. The safe workflow is: commit and push source
+locally, have the notebook clone the exact branch into `/kaggle/working`, run
+tests with that clone as the working directory, save a Kaggle version, download
+the executed notebook, and commit that downloaded file locally. The notebook
+must print `git rev-parse HEAD` and must never commit or push.
+
+ME:
+Also ensure `.codex` and similar files are not committed. Start implementing.
+
+AI:
+I verified the Git name/email, created `2105001/phases-5-7` from updated main,
+and strengthened `.gitignore` for `.codex`, `.agents`, `.env`, IDE metadata,
+caches, Kaggle credentials, and generated artifacts.
+
+I implemented a deterministic Pillow/NumPy layout baseline. It creates bounded
+text and heading regions, detects ruled tables as atomic regions, avoids
+interleaving column reading order, preserves input page order and exact page
+IDs, and removes nested duplicate OCR regions. Synthetic tests cover bounds,
+determinism, table handling, columns, and linkage.
+
+I implemented the EasyOCR `bn+en` reader through the fixed `Reader` and
+`transcribe()` interfaces. It resolves canonical page images, crops validated
+regions, reconstructs lines geometrically, applies NFC rather than NFKC,
+skips empty OCR regions, and creates stable region chunk IDs with document and
+page provenance. The model loads lazily once per reader. The expensive Qwen3-VL
+model remains a stored held-out comparison rather than the operational
+full-corpus reader.
+
+I implemented fixed and grammar-rule-aware chunking. Tests verify fixed overlap,
+Bengali numbered-rule boundaries, rule-plus-example retention, oversized-rule
+fallback, continued rule labels, atomic tables, multi-page citations, NFC,
+deterministic IDs, empty inputs, and invalid settings. I kept the fixed public
+function signatures and data contracts unchanged.
+
+The focused tests initially found two real issues: zero-padded canonical page
+IDs were rejected, and table-line detection could include unrelated text on
+the same rows. I corrected the page-ID expression and changed table detection
+to use longest contiguous stroke runs. A later real-page inspection revealed
+nested small regions inside large regions, so I added duplicate containment
+filtering. The final local gate passed 22 focused and structure tests, and no
+forbidden hidden/generated paths were tracked.
+
+ME:
+Write the Kaggle notebook so its paths and tests work correctly.
+
+AI:
+I replaced the placeholder `kb_demo.ipynb` with a Kaggle evidence runner. It
+clones `2105001/phases-5-7`, prints the tested commit, installs the pinned
+Phase 5-7 packages, runs repository-relative tests, visualizes numbered layout
+boxes on representative pages, measures raw and NFC/whitespace-normalized CER
+and WER on the same 12 held-out pages, records the worst OCR page, renders and
+OCRs the complete private corpus, measures usable pages and words, and compares
+fixed with rule-aware chunks. It does not use native PDF text and does not
+perform any Git write from Kaggle.
+
+ME:
+I ran and downloaded the updated notebook. The layout is mostly good. On one
+page I noticed two boxes where one might have been enough, and a box around a
+year. I am not sure whether the year box is a problem.
+
+AI:
+I validated the downloaded notebook rather than relying only on its appearance.
+All eight code cells ran in order without errors. It tested source commit
+`d02dd7f`, and every required PASS marker was saved. The year is legitimate
+source content and can be retained. The isolated possible over-segmentation did
+not violate bounds, reading order, page linkage, coverage, or OCR execution, so
+I treated it as a minor limitation rather than forcing an expensive full rerun.
+
+The measured results were:
+
+- 783 declared PDF pages;
+- 775 usable loaded and OCR-covered pages;
+- 3,428 OCR source regions;
+- 195,803 usable OCR words;
+- fixed chunk baseline: 875 chunks;
+- rule-aware strategy: 1,910 chunks;
+- overall EasyOCR raw CER: 0.2007 and raw WER: 0.5220;
+- overall EasyOCR normalized CER: 0.1791 and normalized WER: 0.5063;
+- clean NCTB normalized CER: 0.0488 and WER: 0.1268;
+- historical-book normalized CER: 0.3416 and WER: 0.9661;
+- worst EasyOCR page: `bhasha_prakash_1942_p0410`, a historical table with
+  verb inflection and scan artifacts.
+
+The stored Phase 3 candidate was better on the historical held-out pages but is
+not used for the reproducible full build because running Qwen3-VL 8B over the
+entire 565-page historical book would add substantial runtime and dependency
+cost. I committed the executed notebook separately and replaced the stale
+`words: 0` fields in the task, manifest, and provenance documents with the
+notebook-backed 195,803-word measurement.
+
+ME:
+Prepare my work record and hand over the remaining assignment to 2105006. The
+handover must not accidentally remain in the final submitted tree.
+
+AI:
+I prepared this disclosed condensed reconstruction and a separate local-only
+handover. The handover identifies the exact completed commit, measurements,
+remaining embedding/FAISS/retrieval implementation, evidence requirements,
+tests, documentation, and submission gates. It is excluded locally from Git
+and must be sent directly to 2105006 rather than committed.
+
+REFLECTION
+==========
+
+WHAT I ACCEPTED
+---------------
+
+I accepted the deterministic layout baseline because the books are mostly
+single-column grammar text with headings and ruled tables. The real-page
+gallery showed that projection-based blocks and atomic table detection were
+adequate without adding a large learned layout model. I also accepted retaining
+the isolated box around a printed year because the year is real source content;
+a page-specific removal rule would make the layout less general.
+
+I accepted EasyOCR `bn+en` as the operational OCR reader because it offered the
+best speed, accuracy, dependency cost, and reproducibility tradeoff for a
+783-page Kaggle build. Its clean NCTB accuracy was strong, it processed the full
+corpus in one reproducible pipeline, and its weaknesses on historical pages
+were measured rather than hidden. NFC-only normalization was accepted because
+it preserves meaningful Bangla distinctions better than compatibility
+normalization.
+
+I accepted rule-aware chunking as the selected strategy. A Bengali grammar
+answer needs the numbered rule or subsection, its definition, its examples,
+and its canonical citation pages together. The rule-aware method preserves
+these units, keeps tables atomic where possible, carries every contributing
+page ID, and uses overlapping windows only when a structural unit is too large
+or no reliable rule boundary exists.
+
+I accepted the separation between local Git commits and Kaggle execution.
+Source and tests were committed first, Kaggle cloned and printed the exact
+source commit, and the downloaded output-bearing notebook received its own
+later evidence commit. This keeps both authorship and measurements auditable.
+
+WHAT I CHANGED
+--------------
+
+I changed the initial idea of enabling Qwen3-VL 8B as a full historical-book
+fallback. The stored Phase 3 candidate improved historical held-out OCR, but
+running it over all 565 historical pages would add substantial runtime, memory,
+and dependency cost. I kept it as a measured comparison and selected EasyOCR
+for the operational full build.
+
+Testing also changed parts of the implementation. I corrected zero-padded page
+ID handling, replaced total-row-ink table detection with longest contiguous
+stroke detection, and filtered nested duplicate regions after real-page
+inspection. These changes were accepted only after the focused tests and
+visual evidence supported them.
+
+WHAT I REJECTED
+---------------
+
+I rejected plain fixed-size chunking as the final standalone chunking strategy
+because a 256-token boundary can separate a grammatical definition from its
+examples or rule number. I did not remove it: it remains the required baseline
+and the fallback for oversized or unstructured text, allowing the next phase
+to compare retrieval quality fairly against rule-aware chunks.
+
+I rejected using native PDF text as OCR evidence, using NFKC normalization, and
+silently correcting uncertain Bangla text. Those choices could create clean but
+unfaithful grammar rules and break citation traceability.
+
+I rejected implementing embeddings, FAISS persistence, and final retrieval in
+my work package. Those tasks belong to the remaining portion of Phase 7 and
+should be implemented, measured, and committed by the teammate who performs
+them rather than being bundled into my contribution without evidence.
