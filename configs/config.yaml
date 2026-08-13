@@ -57,15 +57,21 @@ enhance:
 layout:
   model: "heuristic-baseline"
   score_thr: 0.5
-  reading_order: "top-to-bottom-left-to-right"
+  reading_order: "section-aware-columns"
+  foreground_threshold: 200
+  table_horizontal_fraction: 0.45
+  table_vertical_fraction: 0.20
 
 ocr:
   model: "easyocr:bn"
+  languages: ["bn", "en"]
+  batch_size: 8
+  workers: 0
   finetune: false
   unicode_normalization: "NFC"
   preserve_raw_text: true
   historical_fallback:
-    enabled: true
+    enabled: false
     model: "Qwen/Qwen3-VL-8B-Instruct"
     apply_to_doc_ids: ["bhasha_prakash_1942"]
   vlm_fallback:
