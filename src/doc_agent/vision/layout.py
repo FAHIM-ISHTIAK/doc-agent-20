@@ -111,7 +111,7 @@ def _text_boxes(
             blocks.append(box)
 
     padding = max(2, min(height, width) // 350)
-    return [
+    padded = [
         (
             max(0, x0 - padding),
             max(0, y0 - padding),
@@ -119,6 +119,18 @@ def _text_boxes(
             min(height, y1 + padding),
         )
         for x0, y0, x1, y1 in blocks
+    ]
+    return [
+        box
+        for index, box in enumerate(padded)
+        if not any(
+            index != other_index
+            and other[0] <= box[0]
+            and other[1] <= box[1]
+            and other[2] >= box[2]
+            and other[3] >= box[3]
+            for other_index, other in enumerate(padded)
+        )
     ]
 
 
