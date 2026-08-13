@@ -15,8 +15,9 @@ success:
 corpus:
   path: "data/raw/"
   pages: 783
-  words: 0
-  words_status: "pending measured OCR in A2"
+  usable_pages: 775
+  words: 195803
+  words_status: "measured by the executed Phase 6 Kaggle OCR build"
   provenance: "data/provenance.md"
   preparation: "scripts/get_data.sh"
   revision_from_a1: >-

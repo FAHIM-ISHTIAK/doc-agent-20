@@ -27,8 +27,9 @@ corpus:
   min_pages: 300
   min_words: 60000
   pages: 783
-  words: 0
-  words_status: "pending measured OCR in A2"
+  usable_pages: 775
+  words: 195803
+  words_status: "measured by the executed Phase 6 Kaggle OCR build"
   path: "data/raw/"
   source_url: "https://archive.org/details/in.ernet.dli.2015.457377"
   source_urls:

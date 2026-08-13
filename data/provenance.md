@@ -13,7 +13,10 @@ Combined source size: **169,861,192 bytes (161.99 MiB)**.
 
 Combined raw page count: **783 pages**, above the 300-page requirement.
 
-Usable OCR word count: **pending Phase 6 measured OCR**; it must replace `0` in the manifest before A2 submission and must exceed 60,000.
+The executed Phase 6 Kaggle build loaded **775 usable pages**, produced OCR for all
+775 of them in 3,428 source regions, and measured **195,803 usable OCR words**.
+This exceeds the 60,000-word requirement. The committed `kb_demo.ipynb` records
+the tested source commit, verified PDF hashes, full build counts, and PASS gate.
 
 ## Sources and usage rights
 
