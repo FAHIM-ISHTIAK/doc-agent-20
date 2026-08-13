@@ -107,16 +107,17 @@ def run(pages: list[Page], cfg: dict) -> list[Page]:
 
     preprocess_cfg = cfg.get("preprocess", {})
     enabled = any(
-        bool(preprocess_cfg.get(operation, True))
-        for operation in ("deskew", "denoise", "binarize")
+        bool(preprocess_cfg.get(operation, True)) for operation in ("deskew", "denoise", "binarize")
     )
     if not enabled:
         return [page.model_copy(deep=True) for page in pages]
 
     output_root = _output_root(cfg).resolve()
-    raw_root = Path(
-        os.getenv("DOC_AGENT_DATA_DIR", cfg.get("data", {}).get("raw_dir", "data/raw"))
-    ).expanduser().resolve()
+    raw_root = (
+        Path(os.getenv("DOC_AGENT_DATA_DIR", cfg.get("data", {}).get("raw_dir", "data/raw")))
+        .expanduser()
+        .resolve()
+    )
     if output_root == raw_root or raw_root in output_root.parents:
         raise ValueError("Preprocessed output must not be written inside the raw input directory")
     output_root.mkdir(parents=True, exist_ok=True)

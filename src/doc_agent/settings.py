@@ -19,15 +19,11 @@ class Settings(BaseSettings):
 
     input_root: Path = Field(default=Path("data"), validation_alias="DOC_AGENT_INPUT_ROOT")
     data_dir: Path = Field(default=Path("data/raw"), validation_alias="DOC_AGENT_DATA_DIR")
-    artifact_dir: Path = Field(
-        default=Path("artifacts"), validation_alias="DOC_AGENT_ARTIFACT_DIR"
-    )
+    artifact_dir: Path = Field(default=Path("artifacts"), validation_alias="DOC_AGENT_ARTIFACT_DIR")
     run_mode: Literal["small", "full"] = Field(
         default="small", validation_alias="DOC_AGENT_RUN_MODE"
     )
-    small_max_pages: int = Field(
-        default=20, ge=1, validation_alias="DOC_AGENT_SMALL_MAX_PAGES"
-    )
+    small_max_pages: int = Field(default=20, ge=1, validation_alias="DOC_AGENT_SMALL_MAX_PAGES")
 
     @property
     def page_limit(self) -> int | None:
