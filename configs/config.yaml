@@ -89,7 +89,7 @@ index:
   path: "artifacts/index"
   chunk_tokens: 256
   overlap: 32
-  rule_aware: false
+  rule_aware: true
 
 retrieve:
   k: 8
