@@ -4,6 +4,7 @@ artifacts/
 *.ckpt
 wandb/
 __pycache__/
+*.egg-info/
 .venv/
 .codex/
 .agents/

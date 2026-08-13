@@ -101,9 +101,7 @@ def load_pages(cfg: dict) -> list[Page]:
         doc_id, page_number = parsed
         page_id = f"{doc_id}_p{page_number:04d}"
         if page_id in seen_ids:
-            raise ValueError(
-                f"Duplicate stable page ID {page_id}: {seen_ids[page_id]} and {path}"
-            )
+            raise ValueError(f"Duplicate stable page ID {page_id}: {seen_ids[page_id]} and {path}")
         seen_ids[page_id] = path
         if page_id in excluded_ids:
             continue
@@ -123,7 +121,7 @@ def load_pages(cfg: dict) -> list[Page]:
     limit: int | None = None
     if mode == "small":
         raw_limit = _runtime_value(cfg, "DOC_AGENT_SMALL_MAX_PAGES", "small_max_pages", 20)
-        limit = int(raw_limit)
+        limit = int(str(raw_limit))
         if limit < 1:
             raise ValueError("small-mode page limit must be at least 1")
 

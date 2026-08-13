@@ -1,11 +1,10 @@
 .PHONY: setup seed ingest index eval serve test lint
 setup:
-	python -m pip install -r requirements.lock
-	python -m pip install -e . --no-deps
-seed:  ; python scripts/set_seed.py
-ingest:; python scripts/run_ingest.py
-index: ; python scripts/run_index.py
-eval:  ; python scripts/run_eval.py
-serve: ; uvicorn doc_agent.serve.api:app --host 0.0.0.0 --port 8000
-lint:  ; ruff check . && black --check . && mypy src
-test:  ; pytest
+	uv sync --locked --extra dev
+seed:  ; uv run python scripts/set_seed.py
+ingest:; uv run python scripts/run_ingest.py
+index: ; uv run python scripts/run_index.py
+eval:  ; uv run python scripts/run_eval.py
+serve: ; uv run uvicorn doc_agent.serve.api:app --host 0.0.0.0 --port 8000
+lint:  ; uv run ruff check . && uv run black --check . && uv run mypy src
+test:  ; uv run pytest

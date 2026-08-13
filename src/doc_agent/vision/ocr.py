@@ -93,7 +93,7 @@ def _reconstruct_lines(results: list[Any]) -> str:
 def _normalize(text: str, form: str) -> str:
     if form != "NFC":
         raise ValueError("Bangla OCR normalization must be NFC")
-    normalized = unicodedata.normalize(form, text.replace("\r\n", "\n").replace("\r", "\n"))
+    normalized = unicodedata.normalize("NFC", text.replace("\r\n", "\n").replace("\r", "\n"))
     lines = [" ".join(line.split()) for line in normalized.split("\n")]
     return "\n".join(line for line in lines if line).strip()
 

@@ -40,7 +40,7 @@ CI rejects a repo whose structure or interfaces drift (`tests/test_structure.py`
 
 ## Run
 ```
-make setup        # uv sync (pinned lockfile)
+make setup        # uv sync --locked (pinned uv.lock)
 make seed         # deterministic seeds
 make ingest index # build the KB
 make eval         # metrics on tasks.jsonl
