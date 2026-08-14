@@ -1,0 +1,286 @@
+A2 AI-ASSISTED WORK TRANSCRIPT
+=============================
+
+Member name: Md Junaid Ahmmad
+Student number: 2105006
+Sections led (current A2 mapping): Section 4 (embedding and FAISS index);
+Section 5 (index statistics and retrieval evidence); Section 7 (Stage 4 index
+design choices); Section 8 (this individual AI-work record). Supporting work
+covered retrieval tests, CI/security correction, the Kaggle index experiment,
+and transferring measured results into the design document and A2 form.
+
+CONVERSATION SUMMARY (NON-VERBATIM)
+==================================
+
+ME:
+I am working on the embedding, vector-index, and retrieval-evidence portions of
+the A2 knowledge base. The earlier stages already produce Bangla chunks with
+document IDs and page IDs. Please inspect the repository interfaces and help me
+identify exactly what my section must implement. I want the final index to be
+reproducible, locally testable without downloading a large model, safe to
+reload in a fresh process, and usable in Kaggle without writing to its read-only
+input directory. Do not create a submission tag.
+
+AI:
+I inspected the fixed `Chunk` contract, pipeline ordering, configuration, index
+stubs, build scripts, tests, and workflows. Your Stage 4 implementation needs
+to do four things without changing the public contracts:
+
+1. encode chunks in their original order with the configured pretrained model;
+2. validate and L2-normalize the vectors used by inner-product search;
+3. build and persist FAISS FlatIP together with complete chunk provenance; and
+4. reload the saved artifacts and reject corrupt or inconsistent state.
+
+For local tests, I recommended dependency injection: a tiny deterministic test
+encoder and a small FAISS-compatible test double exercise shape, normalization,
+persistence, search, and restart behavior without a network connection, GPU,
+or multi-gigabyte checkpoint. The production path can still lazily load
+`BAAI/bge-m3` through SentenceTransformers. The writable index path should be
+resolved beneath the configured artifact directory, and the code should reject
+an index path inside `DOC_AGENT_INPUT_ROOT` because Kaggle input is read-only.
+
+ME:
+While testing the embedding boundary, I found that malformed encoder output was
+not rejected early enough. Two chunks can go into the encoder while the output
+has the wrong row count or dimension, contains NaN, or includes an all-zero
+row. FAISS may then fail later with a vague error, or FlatIP may produce
+meaningless cosine-like scores. Where should I catch these problems?
+
+AI:
+Catch them at the embedding boundary, before any persistence. I added a matrix
+validation step that converts the result to contiguous float32 and checks:
+
+- the output is two-dimensional;
+- the row count exactly matches the number of chunks;
+- the column count equals `embed.dim`;
+- every value is finite; and
+- no vector is zero when normalization is enabled.
+
+The vectors are then L2-normalized row by row. This makes FAISS inner product
+equivalent to cosine similarity for normalized data. Empty input returns a
+correct `(0, dimension)` float32 array. Model loading remains lazy, and tests
+inject a deterministic encoder so CI does not download BGE-M3. This moves the
+failure to the exact source of the invalid data and gives a useful message
+instead of a later FAISS assertion or bad score.
+
+ME:
+While checking restart behavior, I noticed that the index and metadata could
+become inconsistent. `index.faiss` may contain two vectors while
+`metadata.json` says there is one chunk, or the JSON may be truncated. The
+FAISS file might still load, but row 1 could then point to the wrong Bangla page.
+A failed process could also leave only one of the two files updated. Please
+make this restart-safe because the page citation must not be guessed.
+
+AI:
+I implemented the vector store as a paired FAISS-plus-JSON artifact with a
+schema version, index type, vector count, dimension, and every serialized
+`Chunk` field. Build validates the vector/chunk count and dimension, creates a
+FlatIP index, and writes each artifact through a temporary file followed by an
+atomic replace. Load checks that both files exist, parses the JSON, reconstructs
+the Pydantic chunks, and verifies schema, count, and dimension against the
+actual FAISS object. Corrupt JSON and count/dimension mismatches fail closed
+with `ValueError`; the code never returns a possibly misaligned citation.
+
+I added a restart test that builds an index, discards the build object, reloads
+it, searches with a query vector, and confirms the recovered Bangla chunk still
+has its exact ID, document ID, text, and ordered page IDs. A second test damages
+the JSON and then changes `vector_count`; both cases must be rejected.
+
+ME:
+My build script currently calls `make ingest index`. I am worried that the
+`index` target may already run the pipeline and that the corpus could be
+processed twice. I only want one fixed end-to-end invocation. Please check and
+correct it if necessary.
+
+AI:
+The safe entry point is `python scripts/run_index.py`, which invokes the fixed
+pipeline once. I changed `scripts/build_index.sh` to call that command directly
+under `set -euo pipefail`. This avoids duplicated ingestion or indexing while
+preserving the required submission path. The index output remains under the
+artifact root rather than the source corpus directory.
+
+ME:
+I generated `uv.lock` and removed the old `requirements.lock`, but the security
+workflow is red. I first thought Bandit B101 might be reading assertions from
+the lock file or tests. The failure is around `uv export --locked --no-dev
+--output-file /tmp/requirements.txt`. Explain whether this is actually B101 and
+fix the workflow without weakening the source scan.
+
+AI:
+The lock file is not the B101 problem. Bandit B101 concerns Python `assert`
+statements, and this workflow scans only `src`, not `uv.lock` or the test suite.
+The failing command came from the older uv installed by `setup-uv@v1`: uv 0.4.4
+exports requirements to standard output and does not support the newer
+`--output-file` form used there.
+
+I kept the Bandit source scan unchanged and corrected only the dependency
+export step to:
+
+`uv export --locked --no-dev > /tmp/requirements.txt`
+
+`pip-audit` then reads that exported non-development dependency list, while
+Bandit continues to scan `src` normally. The CI and security workflows passed
+after the correction, showing that `uv.lock` is the reproducible dependency
+source and B101 is not being hidden or globally skipped.
+
+ME:
+I want to test the implementation locally, but I do not want unit tests to
+download BGE-M3 or require a real FAISS installation/GPU. Give me realistic
+Bangla examples, including a rule that spans pages, and verify the restart
+behavior.
+
+AI:
+I used a deterministic three-dimensional test encoder and a persistence-capable
+FlatIP test double. The tests cover:
+
+- stable chunk order and unit-length embeddings;
+- fixed-window overlap with preserved multi-page provenance;
+- rule-aware separation of `[২.১১২]` and `[২.১১৩]` definitions;
+- repetition of a rule label when an oversized rule must be windowed;
+- a definition on one page and its example on the next, retaining both IDs;
+- an atomic Bangla table when it fits in one chunk;
+- successful build, reload, search, and exact provenance reconstruction; and
+- fail-closed behavior for corrupt or mismatched metadata.
+
+The tests exercise the same public functions as production but do not require
+model downloads. The wider local quality gates—pytest, formatting, linting,
+typing, dependency locking, and Bandit—were run, and the pushed branch later
+showed green CI and security workflows.
+
+ME:
+Now prepare the Kaggle notebook for my private dataset
+`fahimishtiak/bma-corpus`. I need evidence for the form, not just a demo. It
+must compare the selected model with a lightweight model, compare fixed and
+rule-aware chunks, build the complete index, reload it in a fresh process, and
+print a real Bangla retrieval with score, text, chunk ID, document ID, and page
+IDs. Kaggle must not commit or push anything.
+
+AI:
+I extended `notebooks/kb_demo.ipynb` into a reproducible evidence runner. It
+clones branch `junaid`, prints `git rev-parse HEAD`, installs pinned packages,
+runs focused repository tests, loads the attached corpus, and retains the
+earlier layout/OCR evidence. For index evidence it compares:
+
+- `BAAI/bge-m3` with
+  `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; and
+- rule-aware chunks with the fixed 256-token/32-overlap baseline.
+
+It uses four fixed Bangla queries and expected page IDs, reports Hit@5, selects
+the configuration deterministically, records runtime/RSS/artifact sizes and
+corpus coverage, saves the full index, and launches a new Python subprocess to
+reload it. The final cell prints every ranked result and asks for an honest
+manual correctness judgment. All generated artifacts stay under
+`/kaggle/working`; the notebook performs no Git write.
+
+ME:
+I ran the notebook. Here are the results. The corpus has 783 pages, 775 usable
+pages, 3,428 OCR source chunks and 195,803 usable words. BGE-M3 rule-aware made
+1,910 chunks with Hit@5 0.5. BGE-M3 fixed made 875 chunks and also scored 0.5.
+MiniLM rule-aware scored 0.0. The selected index reload passed in a fresh
+process. How should I choose when fixed and rule-aware tie, and how should I
+report the result accurately without claiming one scored higher?
+
+AI:
+Keep the measured tie. The notebook's declared deterministic tie-break selects
+rule-aware when its score is equal to the fixed baseline because it preserves
+grammar definitions, numbered rules, examples, tables, and multi-page citation
+unions. I recorded both Hit@5 values as 0.5 and did not claim an accuracy win.
+The selected BGE-M3/rule-aware index has 1,910 vectors at 1024 dimensions,
+uses L2 normalization and FAISS FlatIP, took 157.75 seconds in the selected
+build, and produced a 7,823,405-byte FAISS file plus 3,327,348-byte metadata.
+The lightweight model's 0.0 result provides the actual model-selection evidence.
+
+ME:
+I found a correctness ambiguity in the final query. For `স্বরধ্বনি কাকে বলে?`,
+the expected historical page is not in the top five, but the first NCTB result
+directly says that sounds produced without obstruction are called স্বরধ্বনি.
+Should the notebook call this PASS or FAIL? I do not want to hide the citation
+miss. Also preserve a genuinely bad failure from another query.
+
+AI:
+The answer-level manual judgment can be a qualified PASS because the returned
+text directly defines the requested concept. The provenance expectation must
+remain separately false because the expected historical page did not appear in
+the top five. I recorded both facts in the notebook instead of collapsing them
+into one misleading result.
+
+The worst retrieval remains `যুক্তবর্ণের উদাহরণ কী?`: expected page
+`bhasha_prakash_1942_p0090` was absent from the top five and unrelated NCTB
+chunks ranked above it. I retained that failure, its scores, and ranked
+provenance. This honestly identifies OCR noise, cross-document variation, and
+limited retrieval evaluation as risks for A3 reranking and evidence-gated
+search.
+
+ME:
+Use only the executed measurements to update my evidence files and the A2 form.
+Do not invent identities, a better metric, or a successful historical-page
+retrieval. Then tell me what I still need to complete personally.
+
+AI:
+I updated the Stage 4 row in `configs/design_choices.md` with the actual model
+comparison, selected configuration, corpus coverage, build time, artifact
+sizes, fresh-process reload, tie-break, and worst failure. I preserved the
+downloaded output-bearing Kaggle notebook and its tested commit
+`711c0443f911d49eb02c0ec235e7f002afed2fe1`.
+
+I filled the evidence-backed parts of `forms/A2_form.docx`: A1 recap, corpus
+revision disclosure, structure, considered options, actual model/parameters,
+pipeline, OCR quality, index statistics, retrieval example, worst failure, A3
+plan, and the eight-facet design table. I did not invent team identities. I
+also verified that all 12 held-out OCR labels are `reviewed` and
+`human_verified: true`. The remaining personal responsibility is to verify the
+team-section mapping, keep this transcript accurate, and ensure the authentic
+name/student details are present before submission.
+
+REFLECTION
+==========
+
+WHAT I ACCEPTED
+---------------
+
+I accepted BGE-M3 as the production embedding model because the Kaggle
+comparison measured Hit@5 0.5 against 0.0 for the lightweight multilingual
+MiniLM baseline on the fixed Bangla query set. I accepted L2-normalized
+FAISS FlatIP because exact search is simple, deterministic, and appropriate for
+1,910 chunks. At this corpus size, an approximate index would add tuning and
+failure modes without a demonstrated benefit.
+
+I accepted rule-aware chunks even though they tied the fixed baseline at Hit@5
+0.5. The choice is based on a declared tie-break and structural usefulness,
+not a false accuracy improvement. Grammar definitions, numbered rules,
+examples, tables, and page citations remain together, which will support
+grounded answers and reranking in A3.
+
+I accepted strict validation and fail-closed loading. A vector-to-metadata row
+mismatch can produce a fluent answer with the wrong citation, which is worse
+than refusing to load. Shape, dimension, finite-value, zero-vector, schema,
+count, and dimension checks make those failures visible at their source.
+
+WHAT I CHANGED
+--------------
+
+I changed the index code from unimplemented stubs to a lazy embedding path and
+a persisted FAISS/metadata pair. I changed the build script from a potentially
+duplicated Make invocation to one fixed pipeline call. I also changed the
+security workflow after tracing the red job to the uv 0.4.4 command interface;
+the correction preserved Bandit's scan rather than suppressing B101.
+
+The failure cases I investigated changed my implementation choices. A wrong-dimension,
+NaN, or zero embedding is now rejected before FAISS. Corrupt JSON or a vector
+count mismatch is rejected during reload. A path inside Kaggle input is
+rejected before a write attempt. These cases became explicit behavior rather
+than assumptions.
+
+WHAT I REJECTED
+---------------
+
+I rejected downloading BGE-M3 during ordinary unit tests. Dependency injection
+keeps tests fast and deterministic while Kaggle provides the real-model
+evidence. I rejected storing only FAISS row numbers without complete Chunk
+metadata because that would break page-level citations after restart.
+
+I rejected claiming that rule-aware chunking beat fixed chunking: both measured
+Hit@5 0.5. I also rejected labeling the verified query as an unqualified
+success. Its text is semantically correct, but the expected historical page
+missed top five. The answer-level PASS and provenance limitation are therefore
+reported together, and the worst যুক্তবর্ণ failure remains visible for A3.
