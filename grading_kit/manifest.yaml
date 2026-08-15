@@ -22,7 +22,8 @@ corpus:
   preparation: "scripts/get_data.sh"
   revision_from_a1: >-
     The NCTB document changed from the 2019 edition named in A1 to the 2026
-    218-page edition. The A2 form must disclose this revision.
+    218-page edition. The revision is disclosed in the A2 form and was approved
+    by the instructor.
   documents:
     - doc_id: "bhasha_prakash_1942"
       filename: "bhasha_prakash_1942.pdf"
@@ -48,8 +49,8 @@ heldout:
   selected_pages: 12
   render_dpi: 300
   excluded_from_training_and_tuning: true
-  label_status: "pending manual transcription and independent review"
-  redistribution_status: "instructor permission required before public commit"
+  label_status: "complete: 12 pages manually transcribed and independently reviewed"
+  redistribution_status: "instructor-approved for this public course repository"
 
 entrypoints:
   build_index: "scripts/build_index.sh"

@@ -34,15 +34,15 @@ JSONL transcription template at:
 Allowed contribution IDs are `2105004` (Fahim), `2105001` (Nahid), and
 `2105006` (Junaid). The notebook rejects names and any other identifier.
 
-## Rights gate
+## Rights and review status
 
-Both source PDFs are currently declared link-only in `data/provenance.md`.
-The notebook therefore writes candidate PNGs to Kaggle artifacts, not to this
-public repository. Obtain explicit instructor/rightsholder guidance before
-committing any page image or full-page transcription. If redistribution is not
-approved, keep the bundle private and ask the instructor how the grader should
-receive the held-out slice.
+Both source PDFs remain link-only in `data/provenance.md`; the full PDFs and
+full rendered corpora are not redistributed. The instructor approved committing
+these 12 selected evaluation-page PNGs and their transcriptions to the public
+course repository for grading. That approval is limited to this held-out course
+evidence and does not change the corpus-wide link-only policy.
 
-Phase 3 is complete only when all 12 records in `../labels.jsonl` are manually
-transcribed, independently reviewed, matched to permitted page images, and the
-notebook's strict gate reports `PHASE 3 HELD-OUT LABELS: PASS`.
+Phase 3 is complete: all 12 records in `../labels.jsonl` were manually
+transcribed, independently reviewed by a member other than the transcriber,
+matched to their approved page images, and accepted by the notebook's strict
+`PHASE 3 HELD-OUT LABELS: PASS` gate.

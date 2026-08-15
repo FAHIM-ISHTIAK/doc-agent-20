@@ -43,7 +43,7 @@ the tested source commit, verified PDF hashes, full build counts, and PASS gate.
 
 ## Declared corpus revision from A1
 
-A1 named the 2019 NCTB edition. The A2 implementation uses the team's available **2026, 218-page edition** instead. This is a corpus-version change, not a change to the domain, data speciality, NFR, or answer-F1 target. It must be disclosed in A2 Section 1 and confirmed with the instructor; hiding it would make A1/A2 provenance inconsistent.
+A1 named the 2019 NCTB edition. The A2 implementation uses the team's available **2026, 218-page edition** instead. This is a corpus-version change, not a change to the domain, data speciality, NFR, or answer-F1 target. The change is disclosed in A2 Section 1 and was approved by the instructor.
 
 ## Data contract and stable identifiers
 

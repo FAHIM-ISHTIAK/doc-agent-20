@@ -23,7 +23,7 @@ serve/api - ui - mlops/registry - eval/metrics (each is one transform in one pla
 ### Property cross-cutting - satisfied across files, verified by a test (no runtime hook)
 | Feature | Touchpoints (all must hold) | Enforced by |
 |---|---|---|
-| Reproducibility | `scripts/set_seed` + `requirements.lock` + deterministic ops in `training/*` + `data/versioning` + `optional/config_snapshot` | `...::reproducible` |
+| Reproducibility | `scripts/set_seed` + `uv.lock` (with exported `requirements.lock`) + deterministic ops in `training/*` + `data/versioning` + `optional/config_snapshot` | `...::reproducible` |
 | Calibration | fit/measure in `eval/calibration` + attach confidence in `llm/postprocess` | `...::calibrated` |
 | Fairness | subgroup metadata emitted in `ingest` + audit in `eval/fairness` | `...::fairness_reported` |
 | Explainability | scores exposed by `retrieval` + attention by `vision` + trace by `logging` + consumed in `eval/interpret` | `...::explanation_available` |

@@ -7,7 +7,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v1
       - run: pip install pip-audit bandit
-      # setup-uv@v1 installs uv 0.4.4, whose export command writes to stdout.
-      - run: uv export --locked --no-dev > /tmp/requirements.txt
-      - run: pip-audit -r /tmp/requirements.txt || true  # dependency CVEs
+      # requirements.lock is the committed audit export of the canonical uv.lock.
+      - run: pip-audit -r requirements.lock || true  # dependency CVEs
       - run: bandit -r src -q                          # code security
