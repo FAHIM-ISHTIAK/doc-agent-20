@@ -10,142 +10,618 @@ implementation); Section 5 (OCR quality and corpus coverage evidence); Section
 AI-work record). Supporting implementation covered Phases 5 and 6 and the
 chunking portion of Phase 7.
 
-CONVERSATION SUMMARY (NON-VERBATIM)
-==================================
+FULL CONVERSATION
+=================
 
 ME:
-Read the Phase 5-7 plan and the handover from 2105004. Phases 0-4 are already
-complete. I intend to complete layout, Bangla OCR, and the chunking part of
-Phase 7. The books are Bengali grammar books, so chunks must retain page
-citations, rule numbers, grammatical definitions, and examples. I have not
-created my branch yet. The autograder and commit history are important. I also
-need a transcript. Do not overengineer the solution.
+read [A2_PLAN.md](doc-agent-20/A2_PLAN.md) and
+[HANDOVER_TO_2105001.md](doc-agent-20/HANDOVER_TO_2105001.md) to understand what i have to do. i am
+intending to complete phase 5,6 and chunking of phase 7. we are working with bengali grammarr books.
+we need to cite page numbers, grammatical rule etc. So choose the appropriate chunking strategy. I
+have to make the commits in a specific format. I still haven't created and checked out to my branch
+yet. Autograder will grade this so i am very cautious about everything. u will tell me exactly the
+commands i need to run or the things i need to do. Phase 0-4 is already complete. U will find
+necessary files and nb from those phases in this repo. I will also have to create a transcript. My
+teammate who completed phase 0-4, has accidentally pushed the 2 attached files into main which
+should not be here. I have to remove them in a commit and also avoid the same mistake myself. don't
+overengineer or do anything extra. start your work
 
 AI:
-I inspected the actual repository before proposing work. Main was clean at the
-Phase 0-4 merge commit, the fixed Pydantic contracts and pipeline order were
-still intact, and layout, OCR, and index chunking were unimplemented stubs. The
-handover required deterministic layout, measured OCR on 12 held-out pages, NFC
-normalization, and both a fixed 256-token/32-overlap chunk baseline and a
-rule-aware strategy. The A2 form requires notebook-backed measurements and one
-transcript per member.
+I’ve identified one grading-critical dependency that the repository cannot answer: six held-out
+records already name you (`2105001`) as their reviewer. Those labels should not be used for Phase 6
+metrics until you have actually compared each image against its transcription. I also need to lock
+the branch/PR shape because it changes the exact command sequence.
+# Phase 5, Phase 6, and Phase 7 Chunking Plan
 
-I recommended one branch, `2105001/phases-5-7`, with separate meaningful
-commits. The selected chunking design was hierarchical and rule-aware: keep a
-numbered grammar rule or definition with its examples, preserve tables as
-units, carry the ordered union of canonical PDF page IDs, and fall back to
-fixed overlapping windows for unstructured or oversized text. Embeddings and
-FAISS were left for the remaining Phase 7 owner.
+## Summary
+
+Work on one branch named `2105001/phases-5-7`. Preserve all fixed contracts and signatures.
+Implement only:
+
+- Phase 5: deterministic layout and reading order.
+- Phase 6: EasyOCR integration, NFC normalization, OCR evaluation, and evidence.
+- Phase 7: fixed-overlap and grammar-rule-aware chunking only.
+- Your Stage 2–4 design documentation and authentic transcript.
+
+Do not implement embeddings, FAISS, retrieval, or unrelated starter stubs. Remove `A2_PLAN.md` and
+`HANDOVER_TO_2105001.md` from the submitted tree without rewriting history.
+
+## 1. Exact Git Setup and Cleanup
+
+Run from the repository:
+
+```bash
+cd "/home/nhr13/DL Project/doc-agent-20"
+
+git switch main
+git pull --ff-only origin main
+git status --short --branch
+
+git config --get user.name
+git config --get user.email
+```
+
+The expected identity is:
+
+```text
+Nahid Hossain Redom
+2105001@ugrad.cse.buet.ac.bd
+```
+
+Then create and publish the work branch:
+
+```bash
+git switch -c 2105001/phases-5-7
+git push -u origin 2105001/phases-5-7
+```
+
+Remove the two accidental coordination files without rewriting Git history:
+
+```bash
+git rm A2_PLAN.md HANDOVER_TO_2105001.md
+git diff --cached --name-only
+git commit -m "chore(repo): remove internal planning files"
+git push
+```
+
+For every later commit, use path-specific `git add`, then inspect the staged files:
+
+```bash
+git status --short
+git diff --cached --name-only
+git diff --cached
+```
+
+Do not use `git add -A`. Never stage raw PDFs, `artifacts/`, model caches, Kaggle credentials, or
+generated page corpora.
+
+## 2. Implementation
+
+### Phase 5 — Layout and Reading Order
+
+Implement `layout.detect()` in `src/doc_agent/vision/layout.py` using Pillow and NumPy already in
+the environment:
+
+- Binarize each preprocessed page and locate its content area.
+- Split content into vertical blocks using whitespace/projection gaps.
+- Treat ruled tables as one atomic `table` region so columns are not interleaved.
+- Classify compact centered blocks as `heading`; ordinary blocks as `text`; use `figure` only for
+clearly dense non-text blocks.
+- Preserve input page order.
+- Within each page, process full-width headings first, then column groups from left to right and
+blocks from top to bottom.
+- Clamp every bounding box to image bounds and reject zero-area boxes.
+- Preserve the exact `Page.id` in every `Region.page_id`.
+- Do not change `Page`, `Region`, `Chunk`, `pipeline.py`, or any public signature.
+
+Add synthetic tests to `tests/test_ocr.py` for bounds, page linkage, determinism, headings, atomic
+tables, and column-aware reading order.
+
+Commit:
+
+```bash
+git add src/doc_agent/vision/layout.py tests/test_ocr.py configs/config.yaml
+git commit -m "feat(layout): detect ordered Bangla grammar regions"
+git push
+```
+
+Add an independently runnable Phase 5 section to `notebooks/eda.ipynb`. It must show numbered
+bounding boxes on historical text, NCTB text, numbered-rule, exercise, and table pages. Do not rerun
+the earlier expensive Qwen cells.
+
+After executing it in Kaggle and downloading the notebook:
+
+```bash
+git add notebooks/eda.ipynb
+git commit -m "notebook(eda): record Phase 5 layout validation"
+git push
+```
+
+### Phase 6 — OCR and Evaluation
+
+Implement `Reader` and `transcribe()` in `src/doc_agent/vision/ocr.py`:
+
+- Resolve each page image from the configured preprocessed artifact path, with canonical/flat raw
+paths as fallback.
+- Lazily create one EasyOCR `bn+en` reader.
+- Crop using the validated `Region.bbox`.
+- Use EasyOCR with `detail=1`, `paragraph=False`, deterministic line reconstruction, and configured
+GPU availability.
+- Keep `Reader.transcribe_region()` output raw.
+- In `transcribe()`, normalize only with Unicode NFC and stable whitespace handling; never use NFKC,
+spelling modernization, or punctuation removal.
+- Return one ordered `Chunk` per non-empty region.
+- Use stable IDs such as `<page_id>_r0001_<kind>`.
+- Derive `doc_id` from the page ID and preserve `page_ids=[region.page_id]`.
+
+Evaluate two candidates on the same 12 held-out pages:
+
+1. Operational EasyOCR pipeline.
+2. Existing Qwen3-VL 8B historical drafts plus EasyOCR for NCTB.
+
+Report separately:
+
+- raw CER and WER;
+- NFC/whitespace-normalized CER and WER;
+- per-document and overall results;
+- sample size;
+- runtime/device;
+- conjunct, matra, hasanta, reph, Bengali-digit, punctuation, and rule-symbol errors;
+- worst page and failure explanation.
+
+Use EasyOCR for the full-corpus operational build because Qwen3-VL 8B across 565 historical pages is
+too expensive for a reproducible Kaggle build. Keep Qwen as the measured comparison, not an enabled
+full-corpus fallback. Update the config accordingly.
+
+Commit source and tests:
+
+```bash
+git add src/doc_agent/vision/ocr.py tests/test_ocr.py configs/config.yaml
+git commit -m "feat(ocr): transcribe Bangla grammar regions"
+git push
+```
+
+Add a standalone Phase 6 section to `notebooks/kb_demo.ipynb`, execute it against the exact branch
+commit, and ensure the output prints `git rev-parse HEAD`.
+
+Then commit:
+
+```bash
+git add notebooks/kb_demo.ipynb
+git commit -m "notebook(a2): measure Bangla OCR quality"
+git push
+```
+
+### Phase 7 — Grammar-Aware Chunking Only
+
+Implement both modes in `src/doc_agent/index/chunk.py`:
+
+- Fixed baseline: approximately 256 whitespace/Unicode tokens with 32-token overlap.
+- Selected strategy: hierarchical rule-aware chunking with the fixed strategy as fallback.
+
+Rule-aware behavior:
+
+- Group input chunks by document and canonical page order.
+- Start structural units at Bengali/Latin numbered rules such as `[২.১১১]`, subsection labels such
+as `ক)`, and chapter/section headings.
+- Keep definition text with following examples introduced by markers such as `যেমন`, `উদাহরণ`, or
+equations.
+- Preserve table headers with their rows; split oversized tables only between rows and repeat the
+header.
+- Keep a rule unit intact when it fits within 256 tokens.
+- Split oversized units at paragraph/sentence boundaries, then use the 32-token fixed overlap
+fallback.
+- Repeat the nearest heading/rule label in continuation chunks so rule attribution survives
+retrieval.
+- Preserve the ordered union of every contributing `page_id`; multi-page rules may cite multiple
+pages.
+- Generate deterministic IDs from document and output sequence.
+- Never silently drop text.
+
+This permits citations to canonical PDF pages through `page_ids` while preserving the book’s printed
+rule number inside the chunk text. Do not claim printed-folio citations where no verified
+full-corpus folio map exists.
+
+Test fixed overlap, Bengali rule boundaries, rule-plus-example preservation, oversized fallback,
+table splitting, multi-page provenance, deterministic IDs, NFC text, and empty inputs in
+`tests/test_retrieval.py`.
+
+Commit:
+
+```bash
+git add src/doc_agent/index/chunk.py tests/test_retrieval.py configs/config.yaml
+git commit -m "feat(index): preserve Bangla grammar rules and examples"
+git push
+```
+
+Add a small fixed-versus-rule-aware comparison to `kb_demo.ipynb`, using identical OCR inputs and
+showing representative resulting chunks and page IDs:
+
+```bash
+git add notebooks/kb_demo.ipynb
+git commit -m "notebook(a2): compare grammar chunking strategies"
+git push
+```
+
+Update only the Stage 2 layout, Stage 3 OCR, and Stage 4 chunking portions of the design record:
+
+```bash
+git add configs/design_choices.md
+git commit -m "docs(design): record layout OCR and chunking choices"
+git push
+```
+
+## 3. Verification and Evidence
+
+In Kaggle, run the targeted gates:
+
+```bash
+python -m pytest tests/test_ingest.py tests/test_ocr.py tests/test_retrieval.py
+tests/test_contracts.py tests/test_structure.py -q
+ruff check src/doc_agent/vision src/doc_agent/index/chunk.py tests/test_ocr.py
+tests/test_retrieval.py
+black --check src/doc_agent/vision src/doc_agent/index/chunk.py tests/test_ocr.py
+tests/test_retrieval.py
+```
+
+Acceptance criteria:
+
+- No fixed contract or signature changes.
+- All regions have valid bounds, allowed kinds, correct page linkage, and deterministic order.
+- OCR produces stable NFC Bengali chunks from real regions.
+- Raw and normalized OCR metrics are backed by saved notebook output.
+- Rule-aware chunks retain definitions, examples, rule identifiers, and all contributing page IDs.
+- Fixed and rule-aware modes are both tested.
+- No large/generated/private artifacts are tracked.
+- `git diff --check` passes.
+
+## 4. Transcript and Merge
+
+Create `transcripts/2105001.txt` only from the authentic exported conversation. It must contain, in
+order:
+
+1. Header: name, student number, and sections led.
+2. Every prompt and AI reply from this work, unedited.
+3. A short personal reflection explaining what you accepted, changed, or rejected.
+
+Commit it separately:
+
+```bash
+git add transcripts/2105001.txt
+git commit -m "docs(transcript): add 2105001 AI work record"
+git push
+```
+
+Final branch checks:
+
+```bash
+git status --short --branch
+git diff --check
+git ls-files A2_PLAN.md HANDOVER_TO_2105001.md
+git log --oneline --decorate origin/main..HEAD
+```
+
+The `git ls-files` command must print nothing. Open one PR from `2105001/phases-5-7` into `main`,
+request a teammate’s real review, and use “Create a merge commit,” not squash. Do not create
+`a2-submit` yet; tagging happens only after the remaining Phase 7 index work and Phases 8–10 are
+complete.
+
+## Assumptions
+
+- The two files to remove are exactly `A2_PLAN.md` and `HANDOVER_TO_2105001.md`.
+- The six historical labels naming `2105001` as reviewer are accepted as genuinely reviewed.
+- Canonical PDF page IDs are the citation authority; printed folios are used only where
+independently verified.
+- Embeddings, FAISS persistence, retrieval evidence, final form completion, and submission tagging
+remain outside this work package.
 
 ME:
-Can you run commands as if I run them, without being a repository contributor?
-I also want a clean Kaggle workflow. I do not want Kaggle to make Git commits.
-Will Kaggle understand the repository test paths?
+so i have a few inquiries b4 i allow u to implement or run the cmd myself. can u run the cmd without
+being a contributor, i.e as if i am running them? Also, did u suggest me to upload nb to kaggle and
+download from kaggle so that i don't make any commit  from kaggle and the kaggle history is clean cz
+i could link the nb to kaggle directly. u talked about running some tests in kaggle, would kaggle
+recognize those paths? U have to write the kaggle nb accordingly
 
 AI:
-The local Git identity was already configured as Nahid Hossain Redom with the
-GitHub-linked 2105001 email, so local commits use that identity. Pushing uses
-the machine's authenticated GitHub credentials. Kaggle version history is
-separate from Git history. The safe workflow is: commit and push source
-locally, have the notebook clone the exact branch into `/kaggle/working`, run
-tests with that clone as the working directory, save a Kaggle version, download
-the executed notebook, and commit that downloaded file locally. The notebook
-must print `git rev-parse HEAD` and must never commit or push.
+Yes—I can run the repository commands on your behalf once execution is allowed. The shell is
+operating in your local workspace, and Git is already configured as:
+
+```text
+Nahid Hossain Redom
+2105001@ugrad.cse.buet.ac.bd
+```
+
+Therefore, commits created here will use that identity, just as if you ran the commands locally.
+However:
+
+- GitHub records the configured commit author, while the push is authenticated using whatever GitHub
+credentials are available on your machine.
+- If authentication is unavailable, I can still create the branch and commits locally, but you would
+need to run `git push`.
+- I cannot operate your Kaggle browser session directly. You will run the prepared notebook there
+and return the executed `.ipynb`.
+
+Your safest Kaggle workflow is:
+
+1. I implement and commit the source code and the unexecuted notebook locally.
+2. I push the working branch.
+3. You import/upload `kb_demo.ipynb` or `eda.ipynb` into Kaggle.
+4. The notebook itself clones or updates `2105001/phases-5-7` under:
+
+```text
+/kaggle/working/doc-agent-20
+```
+
+5. It changes its working directory to that cloned repository.
+6. It runs tests using absolute repository paths.
+7. You save a Kaggle version with outputs.
+8. You download the executed `.ipynb`.
+9. You replace the local notebook.
+10. I verify it and commit it locally under your configured identity.
+
+Saving Kaggle notebook versions does not create Git commits. Kaggle has its own version history,
+separate from GitHub. Avoid using a Kaggle “commit/push to GitHub” feature; we will create Git
+commits only from this local repository.
+
+The notebook should use code equivalent to:
+
+```python
+from pathlib import Path
+import os
+import subprocess
+import sys
+
+REPO_URL = "https://github.com/FAHIM-ISHTIAK/doc-agent-20.git"
+REPO_BRANCH = "2105001/phases-5-7"
+REPO_DIR = Path("/kaggle/working/doc-agent-20")
+ARTIFACT_DIR = Path("/kaggle/working/artifacts")
+
+def run_command(command, cwd=None):
+    completed = subprocess.run(
+        [str(part) for part in command],
+        cwd=str(cwd) if cwd else None,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    print(completed.stdout)
+    print(completed.stderr)
+    if completed.returncode != 0:
+        raise RuntimeError(f"Command failed: {command}")
+    return completed
+
+if REPO_DIR.exists():
+    run_command(["git", "fetch", "origin"], cwd=REPO_DIR)
+    run_command(["git", "switch", REPO_BRANCH], cwd=REPO_DIR)
+    run_command(
+        ["git", "reset", "--hard", f"origin/{REPO_BRANCH}"],
+        cwd=REPO_DIR,
+    )
+else:
+    run_command(
+        [
+            "git",
+            "clone",
+            "--branch",
+            REPO_BRANCH,
+            "--single-branch",
+            REPO_URL,
+            str(REPO_DIR),
+        ]
+    )
+
+os.chdir(REPO_DIR)
+sys.path.insert(0, str(REPO_DIR / "src"))
+
+commit_hash = run_command(
+    ["git", "rev-parse", "HEAD"],
+    cwd=REPO_DIR,
+).stdout.strip()
+
+print("Tested commit:", commit_hash)
+print("Repository:", REPO_DIR)
+```
+
+One correction: I would avoid `git reset --hard` in the final notebook because an existing Kaggle
+working copy might contain useful notebook-session changes. A clean, session-specific clone
+directory is safer:
+
+```python
+REPO_DIR = Path("/kaggle/working/doc-agent-20-phase5-7")
+```
+
+Kaggle will recognize test paths when the command is run with `cwd=REPO_DIR`:
+
+```python
+test_result = run_command(
+    [
+        sys.executable,
+        "-m",
+        "pytest",
+        "tests/test_ingest.py",
+        "tests/test_ocr.py",
+        "tests/test_retrieval.py",
+        "tests/test_contracts.py",
+        "tests/test_structure.py",
+        "-q",
+    ],
+    cwd=REPO_DIR,
+)
+```
+
+The notebooks I prepare will therefore:
+
+- bootstrap the exact Git branch;
+- install only the necessary pinned packages;
+- use `/kaggle/working` for generated artifacts;
+- discover the private PDFs under `/kaggle/input`;
+- use committed held-out images under `grading_kit/heldout_pages`;
+- execute tests from the cloned repository;
+- print the exact tested commit;
+- keep Phase 5 and Phase 6 sections independently runnable;
+- avoid rerunning the old expensive Qwen generation cells;
+- save metrics and visualization output inside the downloaded notebook.
+
+One further adjustment to the earlier plan: the first source commit should be pushed before the
+Kaggle evidence run. The executed notebook should then record that source commit hash. After
+downloading the executed notebook, it gets its own later commit. This is expected—the notebook
+evidences the preceding source commit, not its own eventual commit.
+
+So the source/evidence sequence will be:
+
+```text
+source commit → push → Kaggle executes that commit
+→ download executed notebook → notebook evidence commit
+```
+
+That gives clean Git authorship, clean Kaggle history, and traceable autograder evidence.
 
 ME:
-Also ensure `.codex` and similar files are not committed. Start implementing.
+also make sure that .codex or such files are not committed. start implementing.
 
 AI:
-I verified the Git name/email, created `2105001/phases-5-7` from updated main,
-and strengthened `.gitignore` for `.codex`, `.agents`, `.env`, IDE metadata,
-caches, Kaggle credentials, and generated artifacts.
+The repository is currently clean. No `.codex`, `.agents`, editor metadata, credentials, or artifact
+directories are tracked. `.env.example` is intentionally tracked as a safe template.
 
-I implemented a deterministic Pillow/NumPy layout baseline. It creates bounded
-text and heading regions, detects ruled tables as atomic regions, avoids
-interleaving column reading order, preserves input page order and exact page
-IDs, and removes nested duplicate OCR regions. Synthetic tests cover bounds,
-determinism, table handling, columns, and linkage.
+Before implementation, I’ll extend `.gitignore` with:
 
-I implemented the EasyOCR `bn+en` reader through the fixed `Reader` and
-`transcribe()` interfaces. It resolves canonical page images, crops validated
-regions, reconstructs lines geometrically, applies NFC rather than NFKC,
-skips empty OCR regions, and creates stable region chunk IDs with document and
-page provenance. The model loads lazily once per reader. The expensive Qwen3-VL
-model remains a stored held-out comparison rather than the operational
-full-corpus reader.
+```gitignore
+.codex/
+.agents/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+artifacts/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+kaggle.json
+```
 
-I implemented fixed and grammar-rule-aware chunking. Tests verify fixed overlap,
-Bengali numbered-rule boundaries, rule-plus-example retention, oversized-rule
-fallback, continued rule labels, atomic tables, multi-page citations, NFC,
-deterministic IDs, empty inputs, and invalid settings. I kept the fixed public
-function signatures and data contracts unchanged.
+Before every commit, I’ll verify staged files with:
 
-The focused tests initially found two real issues: zero-padded canonical page
-IDs were rejected, and table-line detection could include unrelated text on
-the same rows. I corrected the page-ID expression and changed table detection
-to use longest contiguous stroke runs. A later real-page inspection revealed
-nested small regions inside large regions, so I added duplicate containment
-filtering. The final local gate passed 22 focused and structure tests, and no
-forbidden hidden/generated paths were tracked.
+```bash
+git diff --cached --name-only
+git diff --cached
+```
+
+And run a final forbidden-file check:
+
+```bash
+git ls-files | rg '(^|/)(\.codex|\.agents|\.env($|\.)|\.idea|\.vscode|artifacts|kaggle\.json)(/|$)'
+```
+
+Only `.env.example` may legitimately match an environment-file check.
+
+I cannot mutate the repository while this session is still in Plan Mode. Once switched to execution
+mode, I’ll begin with the branch creation, `.gitignore` safety update, and removal of the two
+accidental planning files—then proceed through layout, OCR, chunking, tests, and Kaggle-ready
+notebooks.
 
 ME:
-Write the Kaggle notebook so its paths and tests work correctly.
+start implementing
 
 AI:
-I replaced the placeholder `kb_demo.ipynb` with a Kaggle evidence runner. It
-clones `2105001/phases-5-7`, prints the tested commit, installs the pinned
-Phase 5-7 packages, runs repository-relative tests, visualizes numbered layout
-boxes on representative pages, measures raw and NFC/whitespace-normalized CER
-and WER on the same 12 held-out pages, records the worst OCR page, renders and
-OCRs the complete private corpus, measures usable pages and words, and compares
-fixed with rule-aware chunks. It does not use native PDF text and does not
-perform any Git write from Kaggle.
+Implementation is complete and pushed to `2105001/phases-5-7` at commit `d02dd7f`.
+
+Completed:
+
+- Removed the two accidental planning files.
+- Added protections against `.codex`, `.agents`, secrets, editor files, and generated artifacts.
+- Implemented deterministic layout detection and reading order.
+- Implemented EasyOCR Bangla/English OCR with NFC normalization and provenance.
+- Implemented fixed and grammar-rule-aware chunking.
+- Added 22 passing focused/structure tests.
+- Updated Stage 2–4 design choices.
+- Created a Kaggle-ready
+[kb_demo.ipynb](/home/nhr13/DL%20Project/doc-agent-20/notebooks/kb_demo.ipynb).
+- Verified no forbidden files are tracked.
+- Working tree and remote branch are synchronized.
+
+Next, run the notebook in Kaggle:
+
+1. Download `notebooks/kb_demo.ipynb` from branch `2105001/phases-5-7`.
+2. Import it into Kaggle.
+3. Attach the private dataset containing exactly:
+
+```text
+bhasha_prakash_1942.pdf
+nctb_bangla_grammar.pdf
+```
+
+4. Enable GPU and Internet.
+5. Use **Save Version → Save & Run All**.
+6. Do not connect Kaggle’s Git commit/push functionality.
+7. Confirm these final outputs appear:
+
+```text
+PHASE 5-7 FOCUSED TESTS: PASS
+PHASE 5 REAL-PAGE LAYOUT CONTRACT: PASS
+PHASE 5 LAYOUT GALLERY: READY FOR HUMAN CHECK
+PHASE 6 RAW/NORMALIZED OCR METRICS: PASS
+PHASE 6 FULL-CORPUS WORD COUNT: PASS
+PHASE 7 CHUNKING COMPARISON: PASS
+```
+
+8. Visually inspect the Phase 5 gallery before accepting it.
+9. Download the executed `.ipynb` and replace your local `notebooks/kb_demo.ipynb`.
+10. Send me the downloaded notebook or tell me once it has been replaced. I will verify its outputs
+and make the separate evidence commit.
+
+Do not open or merge the PR yet. The executed notebook and your transcript still need to be
+committed.
 
 ME:
-I ran and downloaded the updated notebook. The layout is mostly good. On one
-page I noticed two boxes where one might have been enough, and a box around a
-year. I am not sure whether the year box is a problem.
+i have updated the kb_demo.ipynb. I want u to resume. I have visually resumed and it's mostly good.
+Just in p0032 i see 2 boxes where there might be one. And another might or might not be a prblm is
+that it is bounding a year text on the page. However, overall looks good
 
 AI:
-I validated the downloaded notebook rather than relying only on its appearance.
-All eight code cells ran in order without errors. It tested source commit
-`d02dd7f`, and every required PASS marker was saved. The year is legitimate
-source content and can be retained. The isolated possible over-segmentation did
-not violate bounds, reading order, page linkage, coverage, or OCR execution, so
-I treated it as a minor limitation rather than forcing an expensive full rerun.
+Resumed successfully. Branch `2105001/phases-5-7` is clean and synchronized at `a04ca98`.
 
-The measured results were:
+Completed:
 
-- 783 declared PDF pages;
-- 775 usable loaded and OCR-covered pages;
-- 3,428 OCR source regions;
-- 195,803 usable OCR words;
-- fixed chunk baseline: 875 chunks;
-- rule-aware strategy: 1,910 chunks;
-- overall EasyOCR raw CER: 0.2007 and raw WER: 0.5220;
-- overall EasyOCR normalized CER: 0.1791 and normalized WER: 0.5063;
-- clean NCTB normalized CER: 0.0488 and WER: 0.1268;
-- historical-book normalized CER: 0.3416 and WER: 0.9661;
-- worst EasyOCR page: `bhasha_prakash_1942_p0410`, a historical table with
-  verb inflection and scan artifacts.
+- Committed executed Kaggle evidence as `2194e74`.
+- Recorded 775 usable pages, 3,428 OCR regions, and 195,803 words as `a04ca98`.
+- Verified every notebook PASS gate and execution count.
+- Found no notebook errors, credentials, `.codex`, `.agents`, secrets, or generated artifacts.
+- Accepted the isolated duplicate/year boxes as minor heuristic behavior; the year is legitimate
+source content and provenance remains correct.
 
-The stored Phase 3 candidate was better on the historical held-out pages but is
-not used for the reproducible full build because running Qwen3-VL 8B over the
-entire 565-page historical book would add substantial runtime and dependency
-cost. I committed the executed notebook separately and replaced the stale
-`words: 0` fields in the task, manifest, and provenance documents with the
-notebook-backed 195,803-word measurement.
+Remaining before opening the PR:
+
+1. Export this complete conversation as plain text.
+2. Add your own short reflection.
+3. Save it as `transcripts/2105001.txt`.
+4. Place it in the repository and tell me. I’ll validate, commit, push, and perform the final pre-PR
+audit.
+
+Do not merge or tag yet. Embedding/FAISS/retrieval work must be completed by the teammate handling
+the remainder of Phase 7.
 
 ME:
-Prepare my work record and hand over the remaining assignment to 2105006. The
-handover must not accidentally remain in the final submitted tree.
+i want u to create the transcript. u don't have to copy them verbatim. Try to imitate as if i was
+guiding u and discussing ideas with u. no need to mention the planning ms files. u can see the
+existing one [2105004.txt](doc-agent-20/transcripts/2105004.txt) for idea. Also make similar
+handover md file for my teammate 2105006. I will delete that and merge with main then he can start
+from main and finish the whole thing.
 
 AI:
-I prepared this disclosed condensed reconstruction and a separate local-only
-handover. The handover identifies the exact completed commit, measurements,
-remaining embedding/FAISS/retrieval implementation, evidence requirements,
-tests, documentation, and submission gates. It is excluded locally from Git
-and must be sent directly to 2105006 rather than committed.
+Created both files:
+
+- [Transcript draft](/home/nhr13/DL%20Project/doc-agent-20/transcripts/2105001.txt)
+- [Handover to 2105006](/home/nhr13/DL%20Project/doc-agent-20/HANDOVER_TO_2105006.md)
+
+The handover is locally excluded through `.git/info/exclude`, so it cannot be accidentally staged or
+merged. Send it directly to 2105006, then delete it locally.
+
+The transcript is currently uncommitted. It is honestly labeled as a condensed reconstruction
+because the rubric says an unedited conversation is required. Please read the final reflection and
+confirm it reflects your views. Once confirmed, I’ll rename the section from “Reflection draft,”
+commit only `transcripts/2105001.txt`, push it, and perform the final pre-merge audit.
 
 REFLECTION
 ==========
